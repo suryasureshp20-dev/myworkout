@@ -26,7 +26,7 @@ function cn(...inputs: ClassValue[]) {
 
 // --- Types ---
 interface Exercise {
-  id: string; // Added ID for reliable tracking
+  id: string;
   name: string;
   sets: string;
   reps: string;
@@ -47,28 +47,28 @@ type ScheduleData = {
 const SCHEDULE: ScheduleData = {
   Monday: {
     title: "PUSH A",
-    subtitle: "Chest & Triceps Focus",
+    subtitle: "Shoulder & Upper Chest Focus",
     exercises: [
       {
         id: "m1",
+        name: "Standing Overhead Press (Barbell)",
+        sets: "3 Sets",
+        reps: "8-10",
+        note: "The King. Clear the chin. Core tight.",
+      },
+      {
+        id: "m2",
         name: "Incline DB Press (30°)",
         sets: "3 Sets",
         reps: "10-12",
         note: "Upper Chest Armor. Keep slight arch.",
       },
       {
-        id: "m2",
-        name: "Standing Overhead DB Press",
-        sets: "3 Sets",
-        reps: "10",
-        note: "Volume work. Strict form.",
-      },
-      {
         id: "m3",
         name: "Dips (Leaning Forward)",
         sets: "3 Sets",
         reps: "Failure",
-        note: "Lower Chest & Power.",
+        note: "Lower Chest & Power. Elbows tucked.",
       },
       {
         id: "m4",
@@ -95,7 +95,7 @@ const SCHEDULE: ScheduleData = {
         name: "Pull-ups (Wide Grip)",
         sets: "4 Sets",
         reps: "Failure",
-        note: "Focus on Lats. Use assist.",
+        note: "Focus on Lats. Use assist if needed.",
       },
       {
         id: "t2",
@@ -163,14 +163,14 @@ const SCHEDULE: ScheduleData = {
   },
   Thursday: {
     title: "PUSH B",
-    subtitle: "Shoulder & Power Focus",
+    subtitle: "Power & Triceps Focus",
     exercises: [
       {
         id: "th1",
         name: "Standing Barbell OHP",
         sets: "3 Sets",
         reps: "5-8",
-        note: "👑 The King. Lift Heavy. Squeeze glutes.",
+        note: "Lift Heavy. Squeeze glutes.",
       },
       {
         id: "th2",
