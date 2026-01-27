@@ -1,19 +1,19 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef } from "react";
 import {
   Dumbbell,
   Shield,
-  AlertTriangle,
   Wind,
   Droplets,
-  Utensils,
   Footprints,
-  Activity,
   CheckCircle2,
   ChevronRight,
   Trophy,
+  Sun,
+  Flame,
   Zap,
+  Info,
 } from "lucide-react";
 import { motion, AnimatePresence, type Variants } from "framer-motion";
 import { clsx, type ClassValue } from "clsx";
@@ -43,230 +43,230 @@ type ScheduleData = {
   [key: string]: DaySchedule;
 };
 
-// --- Data ---
+// --- DATA: GOD MODE PROTOCOL (10/10) ---
 const SCHEDULE: ScheduleData = {
   Monday: {
     title: "PUSH A",
-    subtitle: "Shoulder & Upper Chest Focus",
+    subtitle: "Explosive Shoulders",
     exercises: [
       {
         id: "m1",
-        name: "Standing Overhead Press (Barbell)",
-        sets: "3 Sets",
+        name: "Landmine Press",
+        sets: "4 Sets",
         reps: "8-10",
-        note: "The King. Clear the chin. Core tight.",
+        note: "Explosive power. Lean forward. Core tight.",
       },
       {
         id: "m2",
-        name: "Incline DB Press (30°)",
+        name: "Standing Overhead Press",
         sets: "3 Sets",
-        reps: "10-12",
-        note: "Upper Chest Armor. Keep slight arch.",
+        reps: "6-8",
+        note: "Heavy load. Clear the chin.",
       },
       {
         id: "m3",
-        name: "Dips (Leaning Forward)",
+        name: "Incline DB Press (30°)",
         sets: "3 Sets",
-        reps: "Failure",
-        note: "Lower Chest & Power. Elbows tucked.",
+        reps: "10-12",
+        note: "Upper shelf. Controlled negative.",
       },
       {
         id: "m4",
-        name: "Cable Lateral Raises",
-        sets: "4 Sets",
-        reps: "15-20",
-        note: "The Cap. Constant tension.",
+        name: "Weighted Dips",
+        sets: "3 Sets",
+        reps: "Failure",
+        note: "Lean forward. Elbows tucked.",
       },
       {
         id: "m5",
-        name: "Tricep Pushdowns",
-        sets: "3 Sets",
-        reps: "12-15",
-        note: "Use Rope attachment.",
+        name: "Cable Lateral Raises",
+        sets: "4 Sets",
+        reps: "15-20",
+        note: "V-Taper finisher. No momentum.",
       },
     ],
   },
   Tuesday: {
     title: "PULL A",
-    subtitle: "Width & Grip Focus",
+    subtitle: "Back Density & Grip",
     exercises: [
       {
         id: "t1",
-        name: "Pull-ups (Wide Grip)",
+        name: "Weighted Pull-ups",
         sets: "4 Sets",
-        reps: "Failure",
-        note: "Focus on Lats. Use assist if needed.",
+        reps: "6-8",
+        note: "Wide grip. Add weight belt.",
       },
       {
         id: "t2",
-        name: "Lat Pulldowns",
-        sets: "3 Sets",
+        name: "Incline Prone Row (DB)",
+        sets: "4 Sets",
         reps: "10-12",
-        note: "⚠️ Sit on edge/hover for PNS safety.",
+        note: "Face down on incline. Zero spine load.",
       },
       {
         id: "t3",
         name: "Face Pulls",
         sets: "3 Sets",
         reps: "15-20",
-        note: "Rear Delts & Posture.",
+        note: "Pull to forehead. External rotation.",
       },
       {
         id: "t4",
-        name: "Hammer Curls",
+        name: "Cable Rear Delt Fly (Standing)",
         sets: "3 Sets",
-        reps: "10-12",
-        note: "Forearm thickness.",
+        reps: "15-20",
+        note: "Cross cables. Pull wide. Squeeze rear delts.",
       },
       {
         id: "t5",
-        name: "Hand Gripper",
+        name: "DB Farmer's Walks",
         sets: "3 Sets",
-        reps: "Max",
-        note: "Do this between sets.",
+        reps: "Failure",
+        note: "Heaviest DBs. Walk till grip dies.",
       },
     ],
   },
   Wednesday: {
     title: "LEGS A",
-    subtitle: "Squat Pattern",
+    subtitle: "Athletic Power",
     exercises: [
       {
         id: "w1",
-        name: "Goblet Squats",
-        sets: "3 Sets",
-        reps: "12-15",
-        note: "⚠️ Stop at parallel. Torso vertical.",
+        name: "Broad Jumps",
+        sets: "4 Sets",
+        reps: "3 Jumps",
+        note: "MAX distance. Reset after every jump. Explosive.",
       },
       {
         id: "w2",
-        name: "Walking Lunges",
-        sets: "3 Sets",
-        reps: "20 Steps",
-        note: "Total steps. Control the knee.",
+        name: "Trap Bar Deadlift",
+        sets: "4 Sets",
+        reps: "5-8",
+        note: "The Big Lift. Stand tall. Drive floor away.",
       },
       {
         id: "w3",
-        name: "Standing Calf Raises",
-        sets: "4 Sets",
-        reps: "15-20",
-        note: "Full stretch at bottom.",
+        name: "Bulgarian Split Squats",
+        sets: "3 Sets",
+        reps: "8-10",
+        note: "Unilateral torture. Go deep.",
       },
       {
         id: "w4",
-        name: "Hanging Knee Raises",
+        name: "Pallof Press (Cable)",
         sets: "3 Sets",
-        reps: "15",
-        note: "Abs. Zero tailbone pressure.",
+        reps: "15s Hold",
+        note: "Anti-rotation. Fight the cable.",
       },
     ],
   },
   Thursday: {
     title: "PUSH B",
-    subtitle: "Power & Triceps Focus",
+    subtitle: "Chest & Stability",
     exercises: [
       {
         id: "th1",
-        name: "Standing Barbell OHP",
-        sets: "3 Sets",
-        reps: "5-8",
-        note: "Lift Heavy. Squeeze glutes.",
+        name: "Flat DB Bench Press",
+        sets: "4 Sets",
+        reps: "8-10",
+        note: "Heavy. ⚠️ Use thick towel/mat under hips.",
       },
       {
         id: "th2",
-        name: "Flat DB Bench Press",
+        name: "Standing Barbell OHP",
         sets: "3 Sets",
-        reps: "10",
-        note: "⚠️ Use thick towel. Stop if discomfort.",
+        reps: "10-12",
+        note: "Volume work. Strict form.",
       },
       {
         id: "th3",
-        name: "Cable Lateral Raises",
-        sets: "4 Sets",
-        reps: "15-20",
-        note: "Hit side delts again.",
+        name: "Single-Arm Overhead Carry",
+        sets: "3 Sets",
+        reps: "30m/Side",
+        note: "Walk with DB held high. Serratus/Core armor.",
       },
       {
         id: "th4",
-        name: "Skullcrushers (EZ Bar)",
+        name: "Skullcrushers (EZ)",
         sets: "3 Sets",
-        reps: "12",
-        note: "Tricep Mass.",
+        reps: "10-12",
+        note: "Tricep mass. Control eccentric.",
       },
     ],
   },
   Friday: {
     title: "PULL B",
-    subtitle: "Thickness & Traps Focus",
+    subtitle: "Thickness & Yoke",
     exercises: [
       {
         id: "f1",
         name: "Standing Barbell Row",
-        sets: "3 Sets",
+        sets: "4 Sets",
         reps: "8-10",
-        note: "Thickness. Keep spine neutral.",
+        note: "Thick back. Brace core hard.",
       },
       {
         id: "f2",
-        name: "Chin-ups (Underhand)",
+        name: "Chin-ups (Weighted)",
         sets: "3 Sets",
         reps: "Failure",
-        note: "Biceps & Lats.",
+        note: "Underhand. Biceps & Lats.",
       },
       {
         id: "f3",
         name: "Dumbbell Shrugs",
-        sets: "3 Sets",
-        reps: "15",
-        note: "Traps. Hold 2s at top.",
+        sets: "4 Sets",
+        reps: "12",
+        note: "Heavy. Hold 2s at top. Build the yoke.",
       },
       {
         id: "f4",
         name: "Barbell Bicep Curls",
         sets: "3 Sets",
-        reps: "10-12",
-        note: "Bicep Peak.",
+        reps: "8-10",
+        note: "Strict form. No swinging.",
       },
       {
         id: "f5",
-        name: "Hand Gripper",
+        name: "Plate Pinches",
         sets: "3 Sets",
-        reps: "Max",
-        note: "Finish strong.",
+        reps: "Failure",
+        note: "Pinch 2 plates. Thumb power.",
       },
     ],
   },
   Saturday: {
     title: "LEGS B",
-    subtitle: "Hinge Pattern",
+    subtitle: "Hinge & Glute Drive",
     exercises: [
       {
         id: "s1",
-        name: "Romanian Deadlifts (DB)",
-        sets: "3 Sets",
-        reps: "10",
-        note: "Push hips back. Stop at mid-shin.",
+        name: "Romanian Deadlifts",
+        sets: "4 Sets",
+        reps: "8-10",
+        note: "DBs or Bar. Hips back. Hamstring stretch.",
       },
       {
         id: "s2",
-        name: "Step-Ups (Weighted)",
+        name: "Reverse Lunges",
         sets: "3 Sets",
         reps: "10/Leg",
-        note: "Unilateral strength.",
+        note: "Drive through front heel.",
       },
       {
         id: "s3",
-        name: "Standing Calf Raises",
+        name: "Cable Pull-Throughs",
         sets: "4 Sets",
-        reps: "15-20",
-        note: "Don't bounce.",
+        reps: "12-15",
+        note: "Glute power. Stand facing away from machine.",
       },
       {
         id: "s4",
-        name: "Plank (High Position)",
+        name: "Ab Wheel (Kneeling)",
         sets: "3 Sets",
-        reps: "60s",
-        note: "Core stability. No crunches.",
+        reps: "10-15",
+        note: "Use a mat. Deep core tension.",
       },
     ],
   },
@@ -277,20 +277,38 @@ const SCHEDULE: ScheduleData = {
       {
         id: "su1",
         name: "Walk Outside",
-        sets: "1 Session",
-        reps: "8k",
-        note: "Keep blood moving. No gym.",
+        sets: "1 Sess",
+        reps: "8k Steps",
+        note: "Essential for blood flow.",
       },
       {
         id: "su2",
-        name: "Mobility",
-        sets: "10 Mins",
+        name: "Mobility/Stretching",
+        sets: "15 Min",
         reps: "-",
-        note: "Light stretching only.",
+        note: "Focus on hips and shoulders.",
       },
     ],
   },
 };
+
+// --- DATA: MORNING RITUAL (Every Day) ---
+const MORNING_RITUAL: Exercise[] = [
+  {
+    id: "mr1",
+    name: "Fingertip Plank",
+    sets: "3 Sets",
+    reps: "Failure",
+    note: "Claw Strength. Do immediately after waking.",
+  },
+  {
+    id: "mr2",
+    name: "Sink Decompression",
+    sets: "2 Mins",
+    reps: "Hold",
+    note: "Hold sink edge, lean back, decompress spine.",
+  },
+];
 
 const DAYS = [
   "Monday",
@@ -302,436 +320,387 @@ const DAYS = [
   "Sunday",
 ];
 
-// --- Animation Variants ---
+// --- Animation ---
 const containerVar: Variants = {
   hidden: { opacity: 0 },
-  show: {
-    opacity: 1,
-    transition: { staggerChildren: 0.08, delayChildren: 0.1 },
-  },
+  show: { opacity: 1, transition: { staggerChildren: 0.05 } },
 };
-
 const itemVar: Variants = {
-  hidden: { opacity: 0, y: 15 },
-  show: {
-    opacity: 1,
-    y: 0,
-    transition: { type: "spring", stiffness: 250, damping: 20 },
-  },
+  hidden: { opacity: 0, y: 10 },
+  show: { opacity: 1, y: 0 },
 };
 
-// --- Components ---
-
+// --- Sub-Components ---
 const ExerciseCard = ({
   ex,
   isCompleted,
   onToggle,
+  icon,
 }: {
   ex: Exercise;
   isCompleted: boolean;
   onToggle: () => void;
+  icon?: React.ReactNode;
 }) => {
+  // Logic to open YouTube search
+  const handleInfoClick = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevents the card from checking off when clicking 'i'
+    const searchQuery = encodeURIComponent(`${ex.name} proper form`);
+    window.open(
+      `https://www.youtube.com/results?search_query=${searchQuery}`,
+      "_blank",
+    );
+  };
+
   return (
     <motion.div
       variants={itemVar}
-      whileTap={{ scale: 0.98 }}
-      onClick={onToggle}
+      whileTap={{ scale: 0.97 }}
+      onClick={() => {
+        if (typeof navigator !== "undefined" && navigator.vibrate)
+          navigator.vibrate(50);
+        onToggle();
+      }}
       className={cn(
-        "relative overflow-hidden border p-5 rounded-2xl flex flex-col sm:flex-row justify-between items-start sm:items-center transition-all cursor-pointer backdrop-blur-md",
+        "relative border p-4 rounded-2xl flex flex-row items-center gap-4 transition-all cursor-pointer backdrop-blur-md active:opacity-80",
         isCompleted
-          ? "bg-green-950/20 border-green-500/50 shadow-[0_0_20px_rgba(34,197,94,0.1)]"
-          : "bg-slate-900/40 border-slate-800 hover:border-slate-600 hover:bg-slate-800/60",
+          ? "bg-green-950/30 border-green-500/50"
+          : "bg-slate-900/60 border-slate-800",
       )}
     >
-      {/* Decorative Glow on Hover/Active */}
+      {/* Check Circle */}
       <div
         className={cn(
-          "absolute inset-0 transition-opacity pointer-events-none duration-500",
+          "w-8 h-8 rounded-full border-2 flex items-center justify-center transition-all flex-shrink-0",
           isCompleted
-            ? "bg-green-500/5 opacity-100"
-            : "bg-white/5 opacity-0 group-hover:opacity-100",
+            ? "border-green-500 bg-green-500 text-slate-950"
+            : "border-slate-600 text-transparent",
         )}
-      />
+      >
+        <CheckCircle2 size={16} strokeWidth={4} />
+      </div>
 
-      <div className="flex-1 relative z-10 pr-4">
-        <div className="flex items-center gap-3">
-          <div
-            className={cn(
-              "w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all duration-300",
-              isCompleted
-                ? "border-green-500 bg-green-500 text-slate-950"
-                : "border-slate-600 text-transparent",
-            )}
-          >
-            <CheckCircle2 size={14} strokeWidth={4} />
+      {/* Text Content */}
+      <div className="flex-1 min-w-0">
+        <div className="flex justify-between items-center">
+          <div className="flex items-center gap-2 overflow-hidden">
+            <h3
+              className={cn(
+                "text-base font-bold font-oswald tracking-wide truncate",
+                isCompleted
+                  ? "text-green-500/70 line-through"
+                  : "text-slate-100",
+              )}
+            >
+              {ex.name}
+            </h3>
+
+            {/* THE INFO BUTTON */}
+            <button
+              onClick={handleInfoClick}
+              className="p-1.5 rounded-full bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 active:scale-90 transition-all flex-shrink-0"
+            >
+              <Info size={14} />
+            </button>
           </div>
-          <h3
-            className={cn(
-              "text-lg font-bold transition-all font-oswald tracking-wide",
-              isCompleted
-                ? "text-green-500/70 line-through decoration-2 decoration-green-500/50"
-                : "text-slate-100",
-            )}
-          >
-            {ex.name}
-          </h3>
+          {icon && <div className="text-slate-500">{icon}</div>}
         </div>
 
         <p
           className={cn(
-            "text-xs mt-2 flex items-start leading-relaxed font-roboto ml-9 transition-colors",
+            "text-xs truncate font-roboto mt-0.5",
             isCompleted ? "text-green-500/40" : "text-slate-400",
           )}
         >
-          {!isCompleted && (
-            <AlertTriangle
-              size={12}
-              className="text-yellow-500 mr-1.5 mt-0.5 flex-shrink-0"
-            />
-          )}
           {ex.note}
         </p>
       </div>
 
-      <div className="relative z-10 w-full sm:w-auto mt-4 sm:mt-0 flex flex-row sm:flex-col justify-between sm:justify-end items-center sm:items-end pl-0 sm:pl-6 border-t sm:border-t-0 border-slate-800/50 pt-3 sm:pt-0">
-        <div
+      {/* Stats Pill */}
+      <div className="flex flex-col items-end gap-1 flex-shrink-0">
+        <span
           className={cn(
-            "text-2xl font-bold font-oswald tabular-nums tracking-tight transition-colors",
+            "text-lg font-bold font-oswald leading-none",
             isCompleted ? "text-green-500" : "text-white",
           )}
         >
           {ex.reps}
-        </div>
-        <div
+        </span>
+        <span
           className={cn(
-            "text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full transition-colors",
+            "text-[9px] font-bold uppercase px-1.5 py-0.5 rounded",
             isCompleted
-              ? "text-green-900 bg-green-500"
-              : "text-green-500 bg-green-500/10",
+              ? "bg-green-500 text-green-950"
+              : "bg-slate-800 text-slate-400",
           )}
         >
           {ex.sets}
-        </div>
+        </span>
       </div>
     </motion.div>
   );
 };
 
+// --- Rules Section ---
 const RulesSection = ({ onBack }: { onBack: () => void }) => (
   <motion.div
     initial={{ opacity: 0, x: 20 }}
     animate={{ opacity: 1, x: 0 }}
     exit={{ opacity: 0, x: -20 }}
-    transition={{ type: "spring", bounce: 0, duration: 0.4 }}
-    className="space-y-6 pb-24"
+    className="space-y-4"
   >
-    <div className="flex items-center gap-3 mb-8">
-      <button
-        onClick={onBack}
-        className="p-2 -ml-2 rounded-full hover:bg-slate-800 text-slate-400 hover:text-white transition group"
-      >
-        <ChevronRight className="rotate-180 group-hover:-translate-x-1 transition-transform" />
-      </button>
-      <h2 className="text-3xl font-bold text-white font-oswald tracking-wide">
-        THE IRON RULES
-      </h2>
+    <button
+      onClick={onBack}
+      className="flex items-center text-sm text-slate-400 mb-4 font-bold font-oswald"
+    >
+      <ChevronRight className="rotate-180 mr-1" size={16} /> BACK TO WORKOUT
+    </button>
+    <div className="bg-slate-900/50 p-5 rounded-2xl border-l-4 border-red-500">
+      <h3 className="font-oswald font-bold text-white flex items-center gap-2">
+        <Footprints size={18} className="text-red-500" /> STANDING MANDATE
+      </h3>
+      <p className="text-sm text-slate-400 mt-2">
+        Never sit in the gym. If an exercise can be done standing, stand.
+      </p>
     </div>
-
-    <div className="grid gap-4">
-      {[
-        {
-          title: "THE STANDING MANDATE",
-          icon: Footprints,
-          color: "text-red-500",
-          bg: "border-red-500/20 bg-red-950/10",
-          text: "If an exercise can be done standing, you MUST stand. Avoid sitting on gym benches at all costs to protect the sinus.",
-        },
-        {
-          title: "HYGIENE PROTOCOL",
-          icon: Droplets,
-          color: "text-green-500",
-          bg: "border-green-500/20 bg-green-950/10",
-          text: "1. Shower immediately.\n2. Use Medimix (Green) soap on tailbone.\n3. Dry completely using a COOL hairdryer.",
-        },
-        {
-          title: "NUTRITION",
-          icon: Utensils,
-          color: "text-blue-500",
-          bg: "border-blue-500/20 bg-blue-950/10",
-          text: "• Protein: 1.8g per kg (Paneer, Soya, Eggs)\n• Creatine: 5g daily\n• Water: 4 Liters minimum",
-        },
-      ].map((rule, i) => (
-        <motion.div
-          key={i}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: i * 0.1 }}
-          className={cn(
-            "p-6 rounded-2xl border-l-4 shadow-lg backdrop-blur-md",
-            rule.bg,
-          )}
-        >
-          <h3 className="text-white font-bold text-lg mb-3 flex items-center font-oswald tracking-wide">
-            <rule.icon className={cn("mr-3", rule.color)} size={20} />
-            {rule.title}
-          </h3>
-          <p className="text-slate-400 text-sm leading-relaxed whitespace-pre-line font-roboto">
-            {rule.text}
-          </p>
-        </motion.div>
-      ))}
+    <div className="bg-slate-900/50 p-5 rounded-2xl border-l-4 border-green-500">
+      <h3 className="font-oswald font-bold text-white flex items-center gap-2">
+        <Droplets size={18} className="text-green-500" /> HYGIENE
+      </h3>
+      <p className="text-sm text-slate-400 mt-2">
+        Medimix soap on tailbone. Cool dry immediately.
+      </p>
+    </div>
+    <div className="bg-slate-900/50 p-5 rounded-2xl border-l-4 border-blue-500">
+      <h3 className="font-oswald font-bold text-white flex items-center gap-2">
+        <Zap size={18} className="text-blue-500" /> PROTOCOL
+      </h3>
+      <p className="text-sm text-slate-400 mt-2">
+        Elite Version: Landmine Press, Trap Bar, & Explosive movements
+        prioritized.
+      </p>
     </div>
   </motion.div>
 );
 
-// --- Main Page Component ---
-
+// --- Main Component ---
 export default function Home() {
   const [currentDay, setCurrentDay] = useState<string>("Monday");
   const [view, setView] = useState<"workout" | "rules">("workout");
+  const [completed, setCompleted] = useState<Record<string, boolean>>({});
 
-  // State for tracked exercises
-  const [completedExercises, setCompletedExercises] = useState<
-    Record<string, boolean>
-  >({});
+  // 1. Create a reference to the Gym Section
+  const gymSectionRef = useRef<HTMLDivElement>(null);
 
-  const activeData = SCHEDULE[currentDay];
+  const activeGym = SCHEDULE[currentDay];
 
-  // Progress Calculation
-  const totalExercises = activeData.exercises.length;
-  const completedCount = activeData.exercises.filter(
-    (ex) => completedExercises[ex.id],
-  ).length;
-  const progressPercentage = (completedCount / totalExercises) * 100;
+  // Combine for total tracking
+  const allExercises = [...MORNING_RITUAL, ...activeGym.exercises];
+  const doneCount = allExercises.filter((ex) => completed[ex.id]).length;
+  const progress = (doneCount / allExercises.length) * 100;
 
-  const toggleExercise = (id: string) => {
-    setCompletedExercises((prev) => ({
-      ...prev,
-      [id]: !prev[id],
-    }));
+  const toggle = (id: string) =>
+    setCompleted((prev) => ({ ...prev, [id]: !prev[id] }));
+
+  // 2. Function to handle Day Click + Scroll
+  const handleDayChange = (day: string) => {
+    setCurrentDay(day);
+    // Slight delay to allow animation to start, then scroll
+    setTimeout(() => {
+      gymSectionRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }, 100);
   };
 
-  const tabsRef = useRef<HTMLDivElement>(null);
-
   return (
-    <div className="min-h-screen font-roboto text-slate-200 relative selection:bg-green-500/30 selection:text-green-200">
-      {/* Background Ambience */}
-      <div className="fixed inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(34,197,94,0.05),transparent_70%)] pointer-events-none" />
-      <div className="fixed inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 pointer-events-none" />
+    <div className="min-h-screen font-roboto text-slate-200 bg-slate-950 selection:bg-green-500/30">
+      <div className="h-safe-top w-full bg-slate-950" />
 
       {/* Header */}
-      <motion.header
-        initial={{ y: -100 }}
-        animate={{ y: 0 }}
-        className="bg-slate-950/80 border-b border-slate-800/50 pt-4 pb-0 sticky top-0 z-50 backdrop-blur-xl"
-      >
-        <div className="max-w-md mx-auto px-4 sm:px-6 flex justify-between items-center mb-4">
-          <div className="flex items-center space-x-3">
-            <div className="bg-gradient-to-br from-slate-800 to-slate-900 p-2 rounded-xl border border-slate-700 shadow-lg shadow-black/50 group">
-              <Dumbbell className="text-green-500 w-6 h-6 drop-shadow-[0_0_8px_rgba(34,197,94,0.5)] group-hover:rotate-12 transition-transform" />
+      <header className="bg-slate-950/90 border-b border-slate-800 sticky top-0 z-50 backdrop-blur-md">
+        <div className="px-4 py-3 flex justify-between items-center">
+          <div className="flex items-center gap-3">
+            <div className="bg-slate-900 p-2 rounded-lg border border-slate-800">
+              <Dumbbell className="text-green-500 w-5 h-5" />
             </div>
-            <div className="flex flex-col">
-              <h1 className="text-xl font-bold tracking-wider text-white font-oswald leading-none">
+            <div>
+              <h1 className="text-lg font-bold font-oswald leading-none text-white">
                 SORCERER
               </h1>
-              <span className="text-[10px] text-green-500 font-bold tracking-[0.25em] font-oswald uppercase opacity-80 mt-1">
+              <p className="text-[9px] text-green-500 font-bold tracking-[0.2em] uppercase">
                 Killer Protocol
-              </span>
+              </p>
             </div>
           </div>
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.9 }}
+          <button
             onClick={() => setView(view === "rules" ? "workout" : "rules")}
             className={cn(
-              "p-2.5 rounded-full transition-all border",
+              "p-2 rounded-full border transition-all",
               view === "rules"
-                ? "bg-green-500/10 border-green-500 text-green-500 shadow-[0_0_15px_rgba(34,197,94,0.3)]"
-                : "bg-slate-800/50 border-transparent text-slate-400 hover:text-white",
+                ? "border-green-500 bg-green-900/20 text-green-500"
+                : "border-slate-800 bg-slate-900 text-slate-400",
             )}
           >
-            <Shield
-              className="w-5 h-5"
-              fill={view === "rules" ? "currentColor" : "none"}
-            />
-          </motion.button>
+            <Shield size={18} />
+          </button>
         </div>
 
-        {/* Live Progress Line */}
         {view === "workout" && (
-          <div className="h-1 w-full bg-slate-800 relative">
+          <div className="h-1 bg-slate-900 w-full">
             <motion.div
-              className="absolute top-0 left-0 h-full bg-green-500 shadow-[0_0_10px_#22c55e]"
+              className="h-full bg-green-500 shadow-[0_0_10px_#22c55e]"
               initial={{ width: 0 }}
-              animate={{ width: `${progressPercentage}%` }}
-              transition={{ type: "spring", stiffness: 50, damping: 20 }}
+              animate={{ width: `${progress}%` }}
             />
           </div>
         )}
-      </motion.header>
+      </header>
 
-      {/* Main Content */}
-      <main className="max-w-md mx-auto w-full p-4 sm:p-6 pb-28">
+      <main className="px-4 pb-32 pt-4 max-w-md mx-auto">
         <AnimatePresence mode="wait">
           {view === "rules" ? (
-            <RulesSection key="rules" onBack={() => setView("workout")} />
+            <RulesSection onBack={() => setView("workout")} />
           ) : (
             <motion.div
               key="workout"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
             >
-              {/* iOS Style Day Selector */}
-              <div
-                ref={tabsRef}
-                className="flex overflow-x-auto space-x-1.5 mb-8 pb-2 no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0 scroll-smooth"
-              >
-                {DAYS.map((day) => {
-                  const isActive = currentDay === day;
-                  return (
-                    <button
-                      key={day}
-                      onClick={() => setCurrentDay(day)}
-                      className={cn(
-                        "relative px-4 py-2.5 rounded-full text-sm font-bold tracking-wide transition-colors whitespace-nowrap z-10 flex-shrink-0",
-                        isActive
-                          ? "text-slate-950"
-                          : "text-slate-500 hover:text-slate-300",
-                      )}
-                    >
-                      {isActive && (
-                        <motion.div
-                          layoutId="activeTab"
-                          className="absolute inset-0 bg-green-500 rounded-full z-[-1] shadow-[0_0_20px_rgba(34,197,94,0.4)]"
-                          transition={{
-                            type: "spring",
-                            bounce: 0.2,
-                            duration: 0.6,
-                          }}
-                        />
-                      )}
-                      {day.substring(0, 3)}
-                    </button>
-                  );
-                })}
+              {/* Day Selector */}
+              <div className="flex overflow-x-auto gap-2 pb-4 mb-2 no-scrollbar sticky top-[65px] z-40 bg-slate-950/95 py-2 -mx-4 px-4 backdrop-blur-xl">
+                {DAYS.map((day) => (
+                  <button
+                    key={day}
+                    onClick={() => handleDayChange(day)}
+                    className={cn(
+                      "px-4 py-2 rounded-full text-xs font-bold font-oswald tracking-wide flex-shrink-0 border transition-all",
+                      currentDay === day
+                        ? "bg-green-500 text-black border-green-500 shadow-lg shadow-green-900/20"
+                        : "bg-slate-900 text-slate-500 border-slate-800",
+                    )}
+                  >
+                    {day.substring(0, 3)}
+                  </button>
+                ))}
               </div>
 
-              {/* Workout Cards */}
-              <motion.div
-                key={currentDay}
-                variants={containerVar}
-                initial="hidden"
-                animate="show"
-                className="space-y-6"
-              >
-                {/* Day Header */}
-                <div className="flex flex-col gap-1">
-                  <motion.h2
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    className="text-4xl font-bold text-white font-oswald tracking-tight drop-shadow-md"
-                  >
-                    {activeData.title}
-                  </motion.h2>
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.2 }}
-                    className="flex items-center justify-between text-green-500 font-bold uppercase tracking-wide text-xs"
-                  >
-                    <div className="flex items-center">
-                      <Activity size={14} className="mr-2" />
-                      {activeData.subtitle}
-                    </div>
-
-                    {/* Progress Badge */}
-                    <div
-                      className={cn(
-                        "px-2 py-0.5 rounded border transition-all",
-                        completedCount === totalExercises
-                          ? "bg-green-500 text-slate-950 border-green-500 animate-pulse"
-                          : "bg-slate-900 border-slate-800 text-slate-400",
-                      )}
-                    >
-                      {completedCount} / {totalExercises} DONE
-                    </div>
-                  </motion.div>
-                </div>
-
-                {/* Exercise List */}
-                <div className="space-y-3">
-                  {activeData.exercises.map((ex, index) => (
-                    <ExerciseCard
-                      key={ex.id}
-                      ex={ex}
-                      isCompleted={!!completedExercises[ex.id]}
-                      onToggle={() => toggleExercise(ex.id)}
-                    />
-                  ))}
-                </div>
-
-                {/* Completion Celebration Message */}
-                {completedCount === totalExercises && (
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    className="bg-green-500/10 border border-green-500/30 p-4 rounded-xl text-center"
-                  >
-                    <Trophy className="mx-auto text-green-500 mb-2 w-8 h-8" />
-                    <h3 className="text-white font-oswald text-xl uppercase">
-                      Protocol Complete
-                    </h3>
-                    <p className="text-green-500/80 text-xs">
-                      Recover well. See you tomorrow.
-                    </p>
-                  </motion.div>
-                )}
-
-                {/* Recovery Check (Glass) */}
-                <motion.div
-                  variants={itemVar}
-                  className="mt-8 pt-6 border-t border-slate-800/50"
+              <div className="space-y-8">
+                {/* 1. MORNING RITUAL */}
+                <motion.section
+                  variants={containerVar}
+                  initial="hidden"
+                  animate="show"
                 >
-                  <h3 className="text-slate-500 text-[10px] font-bold uppercase mb-4 font-oswald tracking-[0.2em] text-center flex items-center justify-center gap-2">
-                    <Zap size={10} /> Recovery Protocol <Zap size={10} />
+                  <div className="flex items-center gap-2 mb-3 px-1">
+                    <Sun size={14} className="text-orange-400" />
+                    <h2 className="text-xs font-bold font-oswald text-slate-400 uppercase tracking-widest">
+                      Every Morning
+                    </h2>
+                  </div>
+                  <div className="space-y-3">
+                    {MORNING_RITUAL.map((ex) => (
+                      <ExerciseCard
+                        key={ex.id}
+                        ex={ex}
+                        isCompleted={!!completed[ex.id]}
+                        onToggle={() => toggle(ex.id)}
+                      />
+                    ))}
+                  </div>
+                </motion.section>
+
+                {/* 2. GYM SESSION (This is where we scroll to) */}
+                <motion.section
+                  ref={gymSectionRef}
+                  key={currentDay}
+                  variants={containerVar}
+                  initial="hidden"
+                  animate="show"
+                  className="scroll-mt-32"
+                >
+                  <div className="flex items-center justify-between mb-3 px-1 pt-4 border-t border-slate-800/50">
+                    <div className="flex items-center gap-2">
+                      <Dumbbell size={14} className="text-blue-400" />
+                      <h2 className="text-xs font-bold font-oswald text-slate-400 uppercase tracking-widest">
+                        {currentDay.toUpperCase()} Session
+                      </h2>
+                    </div>
+                    <span className="text-[10px] font-bold text-slate-500 bg-slate-900 px-2 py-1 rounded border border-slate-800">
+                      {activeGym.title}
+                    </span>
+                  </div>
+
+                  <div className="mb-4 px-1 flex items-center gap-2">
+                    <Flame size={12} className="text-red-500" />
+                    <span className="text-xs font-bold text-green-500 uppercase tracking-wide">
+                      FOCUS: {activeGym.subtitle}
+                    </span>
+                  </div>
+
+                  <div className="space-y-3">
+                    {activeGym.exercises.map((ex) => (
+                      <ExerciseCard
+                        key={ex.id}
+                        ex={ex}
+                        isCompleted={!!completed[ex.id]}
+                        onToggle={() => toggle(ex.id)}
+                      />
+                    ))}
+                  </div>
+                </motion.section>
+
+                {/* 3. RECOVERY */}
+                <div className="pt-6 border-t border-slate-800/50">
+                  <h3 className="text-center text-[10px] font-bold font-oswald text-slate-500 uppercase tracking-[0.2em] mb-4">
+                    Recovery Protocol
                   </h3>
                   <div className="grid grid-cols-2 gap-3">
-                    <div className="bg-slate-900/40 border border-slate-800 hover:border-green-500/30 transition-colors p-4 rounded-xl flex flex-col items-center justify-center text-center gap-2 backdrop-blur-sm group">
-                      <div className="p-2 bg-green-500/10 rounded-full group-hover:bg-green-500/20 transition-colors shadow-[0_0_15px_rgba(34,197,94,0.1)]">
-                        <Droplets size={20} className="text-green-500" />
-                      </div>
-                      <span className="text-xs text-slate-300 font-bold group-hover:text-green-400 transition-colors">
-                        Medimix Soap
+                    <div className="bg-slate-900/50 border border-slate-800 p-3 rounded-xl flex flex-col items-center text-center gap-2">
+                      <Droplets size={16} className="text-green-500" />
+                      <span className="text-[10px] text-slate-400 font-bold">
+                        MEDIMIX SOAP
                       </span>
                     </div>
-                    <div className="bg-slate-900/40 border border-slate-800 hover:border-blue-500/30 transition-colors p-4 rounded-xl flex flex-col items-center justify-center text-center gap-2 backdrop-blur-sm group">
-                      <div className="p-2 bg-blue-500/10 rounded-full group-hover:bg-blue-500/20 transition-colors shadow-[0_0_15px_rgba(59,130,246,0.1)]">
-                        <Wind size={20} className="text-blue-400" />
-                      </div>
-                      <span className="text-xs text-slate-300 font-bold group-hover:text-blue-400 transition-colors">
-                        Cool Hairdryer
+                    <div className="bg-slate-900/50 border border-slate-800 p-3 rounded-xl flex flex-col items-center text-center gap-2">
+                      <Wind size={16} className="text-blue-400" />
+                      <span className="text-[10px] text-slate-400 font-bold">
+                        COOL DRY
                       </span>
                     </div>
                   </div>
-                </motion.div>
-              </motion.div>
+                </div>
+
+                {doneCount === allExercises.length && (
+                  <motion.div
+                    initial={{ scale: 0.9, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    className="p-4 bg-green-500/10 border border-green-500/20 rounded-xl text-center"
+                  >
+                    <Trophy className="mx-auto text-green-500 mb-2" size={24} />
+                    <h3 className="font-oswald font-bold text-white text-lg">
+                      ALL CLEAR
+                    </h3>
+                    <p className="text-xs text-green-400">
+                      Recovery started. Good work.
+                    </p>
+                  </motion.div>
+                )}
+              </div>
             </motion.div>
           )}
         </AnimatePresence>
       </main>
 
-      {/* Footer / Status Bar */}
-      <footer className="fixed bottom-0 w-full z-40 pointer-events-none">
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/95 to-transparent h-28" />
-        <div className="relative max-w-md mx-auto p-4 flex justify-between items-center text-[10px] font-oswald tracking-widest text-slate-500 pb-6 pt-10">
-          <div className="flex items-center gap-1.5 bg-slate-900/80 px-2 py-1 rounded border border-slate-800 backdrop-blur">
-            <CheckCircle2 size={12} className="text-green-500" />
-            <span className="text-slate-300">PNS SAFE</span>
+      {/* FOOTER */}
+      <footer className="fixed bottom-0 w-full bg-slate-950/90 border-t border-slate-800 backdrop-blur-lg pb-6 pt-3 px-6 z-50">
+        <div className="max-w-md mx-auto flex justify-between items-center text-[10px] font-bold font-oswald tracking-widest text-slate-500">
+          <div className="flex items-center gap-1.5">
+            <CheckCircle2 size={12} className="text-green-600" /> PNS SAFE
           </div>
-          <div className="flex items-center gap-1.5 bg-slate-900/80 px-2 py-1 rounded border border-slate-800 backdrop-blur">
-            <CheckCircle2 size={12} className="text-green-500" />
-            <span className="text-slate-300">NO SITTING</span>
+          <div className="flex items-center gap-1.5">
+            <CheckCircle2 size={12} className="text-green-600" /> NO SITTING
           </div>
         </div>
       </footer>
