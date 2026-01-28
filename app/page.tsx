@@ -14,6 +14,9 @@ import {
   Flame,
   Zap,
   Info,
+  Timer,
+  Sword, // Icon for Combat day
+  Activity,
 } from "lucide-react";
 import { motion, AnimatePresence, type Variants } from "framer-motion";
 import { clsx, type ClassValue } from "clsx";
@@ -43,326 +46,264 @@ type ScheduleData = {
   [key: string]: DaySchedule;
 };
 
-// --- DATA: GOD MODE PROTOCOL (10/10) ---
+// --- DATA: ELITE ATHLETE FIX (FINAL VERSION) ---
 const SCHEDULE: ScheduleData = {
   Monday: {
-    title: "PUSH A",
-    subtitle: "Explosive Shoulders + V-Taper (PNS-SAFE)",
+    title: "LEGS A",
+    subtitle: "Max Velocity & Power",
     exercises: [
       {
         id: "m1",
-        name: "Landmine Press",
-        sets: "5 Sets",
-        reps: "3-5",
-        note: "Explosive reps. Full reset each rep. Stop 1-2 reps before failure (RIR 1-2).",
+        name: "Acceleration Sprints",
+        sets: "6 Sets",
+        reps: "20-30m",
+        note: "Max start speed. Full rest (2m).",
       },
       {
         id: "m2",
-        name: "Standing Overhead Press",
+        name: "Flying Sprints",
         sets: "4 Sets",
-        reps: "4-6",
-        note: "Heavy strength. Brace hard. No backbend. RIR 1-2.",
+        reps: "20m Fly",
+        note: "Build up 20m, then MAX speed 20m. Upright posture.",
       },
       {
         id: "m3",
-        name: "Backpack Push-ups (Weighted)",
+        name: "Broad Jumps",
         sets: "4 Sets",
-        reps: "6-12",
-        note: "Tight backpack. Hands on DB handles/hex DBs for deeper ROM if possible. RIR 1-2.",
+        reps: "3 Jumps",
+        note: "Explosive reset. Quality over fatigue.",
       },
       {
         id: "m4",
-        name: "Cable Lateral Raises",
-        sets: "4 Sets",
-        reps: "12-20",
-        note: "Pure delts. 2s control down. No swing. Last set can be near-failure.",
+        name: "Zercher Squats",
+        sets: "5 Sets",
+        reps: "3-5",
+        note: "Bar in elbows. The Knee Anchor. PNS Safe.",
       },
       {
         id: "m5",
-        name: "Scap Push-ups / Serratus Push-up Plus",
+        name: "Trap Bar Deadlift",
         sets: "3 Sets",
-        reps: "12-20",
-        note: "Shoulder armor. Protract hard at top. Keep ribs down.",
+        reps: "5",
+        note: "Secondary lift. Clean reps only. No grinding.",
       },
     ],
   },
-
   Tuesday: {
     title: "PULL A",
-    subtitle: "Back Width + Grip (PNS-SAFE)",
+    subtitle: "Width & Grip Integrity",
     exercises: [
       {
         id: "t1",
-        name: "Weighted Pull-ups",
-        sets: "5 Sets",
-        reps: "3-6",
-        note: "Clean reps. Full hang. No kipping. Stop before grind (RIR 1-2).",
+        name: "Scapular Pull-ups",
+        sets: "3 Sets",
+        reps: "10",
+        note: "Straight arms. Pull shoulders down. Warmup.",
       },
       {
         id: "t2",
-        name: "1-Arm DB Row (Rack-Braced / Hand-On-Upright)",
+        name: "Weighted Pull-ups",
         sets: "4 Sets",
-        reps: "8-12/Side",
-        note: "No bench. Hinge. Pull elbow to hip. Hard lat squeeze.",
+        reps: "5-8",
+        note: "Vertical power. Full hang.",
       },
       {
         id: "t3",
-        name: "Straight-Arm Cable Pulldown",
-        sets: "3 Sets",
-        reps: "10-15",
-        note: "Lat isolation for V-taper. Arms long. Hips locked. No torso swing.",
+        name: "1-Arm DB Row",
+        sets: "4 Sets",
+        reps: "8-12",
+        note: "Hand on rack (not bench). Heavy lat work.",
       },
       {
         id: "t4",
         name: "Face Pulls",
         sets: "3 Sets",
-        reps: "15-25",
-        note: "Pull to forehead + external rotation. Rear delts + rotator cuff.",
+        reps: "20",
+        note: "Rear delts & Rotator cuff health.",
       },
       {
         id: "t5",
-        name: "Farmer Carries (Heavy, Timed Sets)",
+        name: "DB Farmer's Walks",
         sets: "6 Sets",
-        reps: "20-40m",
-        note: "Do NOT go to failure. Stop when posture breaks. Rest 60-120s.",
+        reps: "30m",
+        note: "Heavy. Stop BEFORE posture breaks. No slouching.",
       },
       {
         id: "t6",
-        name: "Extensor Band Opens (or Rubber Band Finger Opens)",
+        name: "Extensor Band Opens",
         sets: "3 Sets",
-        reps: "25-40",
-        note: "Elbow insurance. Balance the forearms. Don’t skip.",
+        reps: "30",
+        note: "Finger extensions. Elbow health.",
       },
     ],
   },
-
   Wednesday: {
-    title: "LEGS A",
-    subtitle: "Speed + Power + Max Strength (PNS-SAFE)",
+    title: "PUSH A",
+    subtitle: "Shoulders (Scap Control)",
     exercises: [
       {
         id: "w1",
-        name: "Acceleration Sprints",
-        sets: "8 Sets",
-        reps: "20-40m",
-        note: "Full rest (2-3 min). Perfect reps only. Stop if speed drops.",
+        name: "Landmine Press",
+        sets: "5 Sets",
+        reps: "3-5",
+        note: "Explosive. Throw the weight (controlled).",
       },
       {
         id: "w2",
-        name: "Broad Jumps",
-        sets: "4 Sets",
-        reps: "2-3 Jumps",
-        note: "MAX intent. Full reset between jumps. Quality > fatigue.",
+        name: "Standing Overhead Press",
+        sets: "3 Sets",
+        reps: "4-6",
+        note: "Strict strength. Reduced volume for recovery.",
       },
       {
         id: "w3",
-        name: "Barbell Deadlift (Conventional OR Sumo)",
-        sets: "5 Sets",
-        reps: "3-5",
-        note: "Choose the style you can keep clean. No grinders. RIR 1-2. Reset each rep.",
+        name: "Weighted Push-ups",
+        sets: "3 Sets",
+        reps: "8-12",
+        note: "Backpack or vest. Deep range of motion.",
       },
       {
         id: "w4",
-        name: "Front-Foot Elevated Split Squats",
+        name: "Cable Y-Raises",
         sets: "3 Sets",
-        reps: "6-10/Leg",
-        note: "Quad + glute. Knee tracks over toes. Slow eccentric.",
+        reps: "12-15",
+        note: "Lower traps. Arms straight in Y shape.",
       },
       {
         id: "w5",
-        name: "Pallof Press (Cable) - Anti-Rotation",
-        sets: "3 Sets",
-        reps: "20-30s Hold/Side",
-        note: "Ribs down. Glutes tight. Do not twist.",
-      },
-      {
-        id: "w6",
-        name: "Wall Tib Raises",
+        name: "Cable Lateral Raises",
         sets: "4 Sets",
-        reps: "20-40",
-        note: "Back to wall. Toes up hard. Control down. Shin armor.",
-      },
-      {
-        id: "w7",
-        name: "Standing Calf Raises",
-        sets: "4 Sets",
-        reps: "8-15",
-        note: "2s pause at top + deep stretch at bottom. Build elastic ankles.",
+        reps: "15-20",
+        note: "Side delts. Constant tension.",
       },
     ],
   },
-
   Thursday: {
-    title: "PUSH B",
-    subtitle: "Chest + Stability + Triceps (PNS-SAFE)",
+    title: "ENGINE",
+    subtitle: "Zone 2 & Recovery (Standing)",
     exercises: [
       {
         id: "th1",
-        name: "Landmine Chest Press (Standing)",
-        sets: "4 Sets",
-        reps: "6-10",
-        note: "Split stance. Press slightly up and in. RIR 1-2.",
+        name: "Zone 2 Incline Walk/Ruck",
+        sets: "45 Mins",
+        reps: "Steady",
+        note: "Nasal breathing only. NO SITTING/BIKING.",
       },
       {
         id: "th2",
-        name: "Standing DB Overhead Press (Volume)",
+        name: "Dead Hangs",
         sets: "3 Sets",
-        reps: "8-12",
-        note: "Strict. No leanback. Controlled lowering.",
+        reps: "Max Time",
+        note: "Spine decompression. Grip endurance.",
       },
       {
         id: "th3",
-        name: "Single-Arm Overhead Carry",
-        sets: "4 Sets",
-        reps: "20-40m/Side",
-        note: "Walk tall. Biceps by ear. Core locked. Serratus + obliques.",
-      },
-      {
-        id: "th4",
-        name: "Cable Fly (High-to-Low) - Standing",
-        sets: "3 Sets",
-        reps: "10-15",
-        note: "Chest squeeze. Slight forward lean. No shrugging.",
-      },
-      {
-        id: "th5",
-        name: "Cable Pushdowns (Standing)",
-        sets: "3 Sets",
-        reps: "8-12",
-        note: "Heavy triceps. Elbows pinned. Full lockout.",
-      },
-      {
-        id: "th6",
-        name: "Overhead Cable Triceps Extension (Standing)",
-        sets: "2 Sets",
-        reps: "12-20",
-        note: "Long head focus. Smooth reps. Don’t flare ribs.",
+        name: "Mobility Flow",
+        sets: "15 Mins",
+        reps: "-",
+        note: "Focus on hips, ankles, and T-spine.",
       },
     ],
   },
-
   Friday: {
-    title: "PULL B",
-    subtitle: "Thickness + Yoke + Rotational Power (PNS-SAFE)",
+    title: "LEGS B",
+    subtitle: "Hinge & Conditioning Management",
     exercises: [
       {
         id: "f1",
-        name: "Standing Barbell Row",
-        sets: "4 Sets",
-        reps: "5-8",
-        note: "Brace hard. Pull to lower ribs. No torso heave. RIR 1-2.",
+        name: "Romanian Deadlifts",
+        sets: "3 Sets",
+        reps: "6-8",
+        note: "Heavy hinge. Reduced volume for recovery.",
       },
       {
         id: "f2",
-        name: "Weighted Chin-ups",
-        sets: "4 Sets",
-        reps: "4-8",
-        note: "No failure. Leave 1 rep in the tank. Full hang every rep.",
+        name: "Cossack Squats",
+        sets: "3 Sets",
+        reps: "8/Side",
+        note: "Lateral strength. Adductors. Knee health.",
       },
       {
         id: "f3",
-        name: "Dumbbell Shrugs",
-        sets: "4 Sets",
-        reps: "8-12",
-        note: "2s squeeze at top. No rolling. Heavy yoke.",
+        name: "Reverse Lunges",
+        sets: "2 Sets",
+        reps: "8/Leg",
+        note: "Maintenance volume. Perfect form.",
       },
       {
         id: "f4",
-        name: "Cable Rear Delt Fly (Standing)",
-        sets: "3 Sets",
-        reps: "15-25",
-        note: "Arms wide. Scapula moves. Rear delts burn.",
+        name: "Hill Sprints",
+        sets: "6-8 Rounds",
+        reps: "15s Sprint",
+        note: "Max speed. Walk back rest. Don't grind slow reps.",
       },
       {
         id: "f5",
-        name: "Cable Chops (POWER)",
-        sets: "5 Sets",
-        reps: "5/Side",
-        note: "Explosive rotation. Full rest (60-90s). This is athletic power.",
-      },
-      {
-        id: "f6",
-        name: "Plate Pinches (Timed)",
-        sets: "5 Sets",
-        reps: "10-25s",
-        note: "Clean holds. Stop before the plates slip. Rest 60-90s.",
+        name: "Tibialis Raises",
+        sets: "3 Sets",
+        reps: "25",
+        note: "Shin armor for running.",
       },
     ],
   },
-
   Saturday: {
-    title: "LEGS B",
-    subtitle: "Hinge + Lateral Strength + Conditioning (PNS-SAFE)",
+    title: "COMBAT",
+    subtitle: "Upper, Neck & Rotation",
     exercises: [
       {
         id: "s1",
-        name: "Romanian Deadlifts",
+        name: "Standing Barbell Row",
         sets: "4 Sets",
         reps: "6-10",
-        note: "Hips back. Long spine. Feel hamstrings. RIR 1-2.",
+        note: "Thick back. Brace core hard.",
       },
       {
         id: "s2",
-        name: "Cossack Squats (or Lateral Lunges)",
-        sets: "3 Sets",
-        reps: "6-10/Side",
-        note: "Adductors + lateral base. Control depth. Knee tracks.",
+        name: "Incline DB Press",
+        sets: "4 Sets",
+        reps: "8-12",
+        note: "Upper Chest. ⚠️ Towel under lumbar for safety.",
       },
       {
         id: "s3",
-        name: "Reverse Lunges",
-        sets: "3 Sets",
-        reps: "8-12/Leg",
-        note: "Drive through front heel. Torso tall. No bounce.",
+        name: "Suitcase Carries",
+        sets: "4 Sets",
+        reps: "30m/Side",
+        note: "Anti-lateral flexion. Walk perfectly straight.",
       },
       {
         id: "s4",
-        name: "Cable Pull-Throughs",
-        sets: "3 Sets",
-        reps: "10-15",
-        note: "Glutes snap. Neutral spine. Don’t turn it into a squat.",
+        name: "Rotational Cable Chops",
+        sets: "6 Sets",
+        reps: "3/Side",
+        note: "EXPLOSIVE power. Hip drive. Full rest.",
       },
       {
         id: "s5",
-        name: "Ab Wheel (Kneeling)",
+        name: "Standing Neck Training",
         sets: "3 Sets",
-        reps: "8-15",
-        note: "Ribs down. Glutes tight. No low-back sag.",
+        reps: "15-20",
+        note: "4-Way with Hand/Band. NO FLOOR WORK.",
       },
       {
         id: "s6",
-        name: "Conditioning: Hill Sprints OR Run Intervals",
-        sets: "1 Session",
-        reps: "Option A: 8-12×8-12s Hill Sprints (full walk-back rest) | Option B: 10 Rounds: 20s hard + 100s easy",
-        note: "Pick ONE option. This is what separates athletes from lifters.",
-      },
-      {
-        id: "s7",
-        name: "Heel Walks (Tibialis Finisher)",
-        sets: "6 Sets",
-        reps: "20-40m",
-        note: "Toes up the whole time. Short rests. Shin armor.",
+        name: "Plate Pinches (Timed)",
+        sets: "4 Sets",
+        reps: "15s",
+        note: "Stop 1s before failure. Quality holds.",
       },
     ],
   },
-
   Sunday: {
     title: "REST",
-    subtitle: "Active Recovery (Mandatory for Performance)",
+    subtitle: "Active Recovery",
     exercises: [
       {
         id: "su1",
         name: "Walk Outside",
         sets: "1 Sess",
-        reps: "8k-12k Steps",
-        note: "Low intensity. Nasal breathing if possible. Restore, don’t fatigue.",
-      },
-      {
-        id: "su2",
-        name: "Mobility/Stretching",
-        sets: "15-25 Min",
-        reps: "-",
-        note: "Hips (flexors/adductors/ankles) + shoulders (T-spine/serratus).",
+        reps: "10k Steps",
+        note: "Flush the system. Mental reset.",
       },
     ],
   },
@@ -375,7 +316,7 @@ const MORNING_RITUAL: Exercise[] = [
     name: "Fingertip Plank",
     sets: "3 Sets",
     reps: "Failure",
-    note: "Claw Strength. Do immediately after waking.",
+    note: "Toji Claw Strength. Do immediately after waking.",
   },
   {
     id: "mr2",
@@ -420,7 +361,7 @@ const ExerciseCard = ({
 }) => {
   // Logic to open YouTube search
   const handleInfoClick = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevents the card from checking off when clicking 'i'
+    e.stopPropagation(); // Prevents checking off the item
     const searchQuery = encodeURIComponent(`${ex.name} proper form`);
     window.open(
       `https://www.youtube.com/results?search_query=${searchQuery}`,
@@ -552,8 +493,8 @@ const RulesSection = ({ onBack }: { onBack: () => void }) => (
         <Zap size={18} className="text-blue-500" /> PROTOCOL
       </h3>
       <p className="text-sm text-slate-400 mt-2">
-        Elite Version: Landmine Press, Trap Bar, & Explosive movements
-        prioritized.
+        Elite Athlete Fix: Max Velocity, Rotational Power, & Incline Press
+        (Modified).
       </p>
     </div>
   </motion.div>
@@ -606,7 +547,7 @@ export default function Home() {
                 SORCERER
               </h1>
               <p className="text-[9px] text-green-500 font-bold tracking-[0.2em] uppercase">
-                Killer Protocol
+                Elite Protocol
               </p>
             </div>
           </div>
@@ -687,7 +628,7 @@ export default function Home() {
                   </div>
                 </motion.section>
 
-                {/* 2. GYM SESSION (This is where we scroll to) */}
+                {/* 2. GYM SESSION */}
                 <motion.section
                   ref={gymSectionRef}
                   key={currentDay}
@@ -698,7 +639,14 @@ export default function Home() {
                 >
                   <div className="flex items-center justify-between mb-3 px-1 pt-4 border-t border-slate-800/50">
                     <div className="flex items-center gap-2">
-                      <Dumbbell size={14} className="text-blue-400" />
+                      {/* Dynamic Icons */}
+                      {currentDay === "Thursday" ? (
+                        <Timer size={14} className="text-blue-400" />
+                      ) : currentDay === "Saturday" ? (
+                        <Sword size={14} className="text-blue-400" />
+                      ) : (
+                        <Dumbbell size={14} className="text-blue-400" />
+                      )}
                       <h2 className="text-xs font-bold font-oswald text-slate-400 uppercase tracking-widest">
                         {currentDay.toUpperCase()} Session
                       </h2>
