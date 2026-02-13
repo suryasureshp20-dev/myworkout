@@ -1,0 +1,637 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Automation Realm LinkedIn Banner</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@300;400;600;800&display=swap"
+      rel="stylesheet"
+    />
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              dark: "#030304",
+              card: "#0A0A0B",
+              neon: {
+                cyan: "#00f0ff",
+                purple: "#7000ff",
+                green: "#00ff9d",
+              },
+            },
+            animation: {
+              "pulse-slow": "pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite",
+              "float-slow": "float 8s ease-in-out infinite",
+              shine: "shine 8s ease-in-out infinite",
+            },
+            keyframes: {
+              float: {
+                "0%, 100%": { transform: "translateY(0)" },
+                "50%": { transform: "translateY(-6px)" },
+              },
+              shine: {
+                "0%": { left: "-100%", opacity: "0" },
+                "20%": { left: "100%", opacity: "0.5" },
+                "100%": { left: "100%", opacity: "0" },
+              },
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      body {
+        font-family: "Inter", sans-serif;
+        background-color: #050505;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+        overflow: hidden; /* Hide scrollbars for the preview scaling */
+      }
+
+      /* Scale Wrapper for Preview */
+      #preview-wrapper {
+        transform-origin: center center;
+        transition: transform 0.2s ease;
+      }
+
+      /* --- Ambient Background --- */
+      .ambient-mesh {
+        position: absolute;
+        inset: -50%;
+        width: 200%;
+        height: 200%;
+        background:
+          radial-gradient(
+            circle at 50% 50%,
+            rgba(112, 0, 255, 0.05) 0%,
+            transparent 60%
+          ),
+          radial-gradient(
+            circle at 80% 20%,
+            rgba(0, 240, 255, 0.05) 0%,
+            transparent 50%
+          );
+        animation: mesh-spin 30s linear infinite;
+        z-index: 0;
+        pointer-events: none;
+      }
+      @keyframes mesh-spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      /* --- Cyber Grid --- */
+      .cyber-grid {
+        width: 200%;
+        height: 200%;
+        position: absolute;
+        top: -60%;
+        left: -50%;
+        background-image:
+          linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+        background-size: 50px 50px;
+        transform: perspective(600px) rotateX(60deg) translateY(0)
+          translateZ(-100px);
+        animation: grid-scroll 15s linear infinite;
+        mask-image: linear-gradient(
+          to bottom,
+          transparent,
+          black 20%,
+          black 80%,
+          transparent
+        );
+      }
+      @keyframes grid-scroll {
+        0% {
+          background-position: 0 0;
+        }
+        100% {
+          background-position: 0 50px;
+        }
+      }
+
+      /* --- Particles --- */
+      .particles-container {
+        position: absolute;
+        inset: 0;
+        overflow: hidden;
+        pointer-events: none;
+        z-index: 1;
+      }
+      .particle {
+        position: absolute;
+        width: 2px;
+        height: 2px;
+        background: rgba(255, 255, 255, 0.3);
+        border-radius: 50%;
+        animation: rise var(--duration) linear infinite;
+        bottom: -10px;
+        left: var(--left);
+      }
+      @keyframes rise {
+        0% {
+          transform: translateY(0) scale(1);
+          opacity: 0;
+        }
+        20% {
+          opacity: 0.5;
+        }
+        80% {
+          opacity: 0.5;
+        }
+        100% {
+          transform: translateY(-600px) scale(0);
+          opacity: 0;
+        }
+      }
+
+      /* --- 3D Card Animation --- */
+      .card-float {
+        animation: float-card 8s ease-in-out infinite;
+        transform-style: preserve-3d;
+      }
+      @keyframes float-card {
+        0%,
+        100% {
+          transform: perspective(1000px) rotateY(12deg) rotateX(5deg)
+            translateY(0);
+        }
+        50% {
+          transform: perspective(1000px) rotateY(10deg) rotateX(2deg)
+            translateY(-10px);
+        }
+      }
+
+      .code-window {
+        background: #0a0a0b;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        box-shadow:
+          -20px 20px 50px rgba(0, 0, 0, 0.8),
+          0 0 0 1px rgba(0, 0, 0, 1),
+          inset 0 1px 0 rgba(255, 255, 255, 0.05);
+      }
+
+      /* --- Reflection Effect --- */
+      .reflection-sheen {
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 50%;
+        height: 100%;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(255, 255, 255, 0.05),
+          transparent
+        );
+        transform: skewX(-20deg);
+        pointer-events: none;
+        animation: shine 6s infinite;
+        z-index: 30;
+      }
+
+      /* --- Scanline Effect --- */
+      .scanline {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(
+          to bottom,
+          transparent,
+          rgba(0, 240, 255, 0.02),
+          transparent
+        );
+        background-size: 100% 3px;
+        pointer-events: none;
+        z-index: 10;
+      }
+
+      /* --- Text Glows --- */
+      .title-glow {
+        text-shadow: 0 0 40px rgba(255, 255, 255, 0.15);
+      }
+
+      /* --- Cursor Blink --- */
+      .cursor {
+        display: inline-block;
+        width: 8px;
+        height: 1.2em;
+        background-color: #00ff9d;
+        animation: blink 1s step-end infinite;
+        vertical-align: text-bottom;
+        margin-left: 2px;
+      }
+      @keyframes blink {
+        50% {
+          opacity: 0;
+        }
+      }
+
+      /* --- Noise Grain --- */
+      .noise {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        opacity: 0.04;
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+        pointer-events: none;
+        z-index: 50;
+      }
+
+      /* --- Corner Accents --- */
+      .corner-accent {
+        position: absolute;
+        width: 12px;
+        height: 12px;
+        border-color: rgba(255, 255, 255, 0.2);
+        border-style: solid;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      .group:hover .corner-accent {
+        border-color: #00f0ff;
+        width: 20px;
+        height: 20px;
+        box-shadow: 0 0 15px rgba(0, 240, 255, 0.3);
+      }
+
+      /* Technical Crosshairs */
+      .crosshair {
+        position: absolute;
+        width: 20px;
+        height: 20px;
+        pointer-events: none;
+      }
+      .crosshair::before,
+      .crosshair::after {
+        content: "";
+        position: absolute;
+        background: rgba(255, 255, 255, 0.1);
+      }
+      .crosshair::before {
+        width: 100%;
+        height: 1px;
+        top: 50%;
+      }
+      .crosshair::after {
+        width: 1px;
+        height: 100%;
+        left: 50%;
+      }
+    </style>
+  </head>
+  <body class="antialiased selection:bg-cyan-500/30 selection:text-white">
+    <!-- Scaling Wrapper for Preview -->
+    <div id="preview-wrapper">
+      <!-- Main Container Frame: 1584x396px for LinkedIn -->
+      <div
+        class="relative w-[1584px] h-[396px] bg-dark rounded-none overflow-hidden shadow-2xl group border border-white/10 shrink-0"
+      >
+        <!-- Texture & Ambient -->
+        <div class="noise"></div>
+        <div class="ambient-mesh"></div>
+
+        <!-- Particles -->
+        <div class="particles-container">
+          <div class="particle" style="--left: 10%; --duration: 8s"></div>
+          <div class="particle" style="--left: 30%; --duration: 12s"></div>
+          <div class="particle" style="--left: 50%; --duration: 10s"></div>
+          <div class="particle" style="--left: 70%; --duration: 14s"></div>
+          <div class="particle" style="--left: 90%; --duration: 9s"></div>
+        </div>
+
+        <!-- Left Visual Zone (Fixed width to ensure separation) -->
+        <div
+          class="absolute left-0 top-0 w-[600px] h-full overflow-hidden z-0 pointer-events-none fade-mask"
+        >
+          <div class="cyber-grid"></div>
+          <!-- Glow spot behind code -->
+          <div
+            class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-neon-cyan/5 rounded-full blur-[100px]"
+          ></div>
+        </div>
+
+        <!-- HUD Elements -->
+        <div
+          class="absolute top-6 left-6 text-[10px] font-mono text-white/30 tracking-widest z-20"
+        >
+          COORDINATES: 45.203 / 12.001<br />
+          SECTOR: ALPHA-9
+        </div>
+
+        <div
+          class="corner-accent border-t border-l top-4 left-4 rounded-tl-sm"
+        ></div>
+        <div
+          class="corner-accent border-t border-r top-4 right-4 rounded-tr-sm"
+        ></div>
+        <div
+          class="corner-accent border-b border-l bottom-4 left-4 rounded-bl-sm"
+        ></div>
+        <div
+          class="corner-accent border-b border-r bottom-4 right-4 rounded-br-sm"
+        ></div>
+
+        <!-- Crosshairs -->
+        <div class="crosshair top-1/2 left-10"></div>
+        <div class="crosshair bottom-10 left-1/3"></div>
+
+        <!-- Content Flex Wrapper -->
+        <div class="relative z-10 flex flex-row-reverse w-full h-full">
+          <!-- RIGHT SIDE: Text Content (Ensuring text stays within bounds) -->
+          <!-- Reduced width slightly and adjusted padding to keep inside -->
+          <div
+            class="w-[950px] p-8 pr-12 flex flex-col justify-center items-end text-right h-full relative z-20"
+          >
+            <!-- Status Badge -->
+            <div
+              class="mb-3 flex items-center gap-2 px-4 py-1.5 rounded-full border border-white/10 bg-white/5 backdrop-blur-md hover:border-white/20 transition-colors cursor-default"
+            >
+              <span class="relative flex h-2 w-2">
+                <span
+                  class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"
+                ></span>
+                <span
+                  class="relative inline-flex rounded-full h-2 w-2 bg-green-500"
+                ></span>
+              </span>
+              <span
+                class="text-xs font-mono tracking-[0.2em] text-slate-300 uppercase"
+                >System Online</span
+              >
+            </div>
+
+            <!-- Main Header (Adjusted size to fit securely) -->
+            <h1
+              class="text-6xl font-bold tracking-tight mb-2 title-glow leading-tight"
+            >
+              <span class="text-white block drop-shadow-lg">Automation</span>
+              <span
+                class="bg-clip-text text-transparent bg-gradient-to-r from-slate-100 via-slate-300 to-slate-500 block"
+              >
+                Realm
+              </span>
+            </h1>
+
+            <!-- Secondary Text -->
+            <p
+              class="text-xl text-slate-400 font-light mb-6 max-w-lg leading-snug border-r-2 border-slate-800 pr-5"
+            >
+              Architecting
+              <span class="text-white font-medium shadow-sm">Secure</span>,
+              Multi-Tenant
+              <span class="text-white font-medium shadow-sm">SaaS</span>
+              Solutions.
+            </p>
+
+            <!-- Tagline Pills (Updated Tags) -->
+            <div class="flex flex-wrap justify-end gap-3 mb-6">
+              <div
+                class="px-3.5 py-1.5 rounded-lg bg-white/5 border border-white/5 text-sm font-mono text-slate-300 flex items-center gap-2 hover:bg-white/10 hover:border-cyan-500/30 transition-all duration-300 cursor-default group/pill"
+              >
+                <span class="text-cyan-400 group-hover/pill:text-cyan-300"
+                  >#</span
+                >Application
+              </div>
+              <div
+                class="px-3.5 py-1.5 rounded-lg bg-white/5 border border-white/5 text-sm font-mono text-slate-300 flex items-center gap-2 hover:bg-white/10 hover:border-purple-500/30 transition-all duration-300 cursor-default group/pill"
+              >
+                <span class="text-purple-400 group-hover/pill:text-purple-300"
+                  >#</span
+                >Security
+              </div>
+              <div
+                class="px-3.5 py-1.5 rounded-lg bg-white/5 border border-white/5 text-sm font-mono text-slate-300 flex items-center gap-2 hover:bg-white/10 hover:border-green-500/30 transition-all duration-300 cursor-default group/pill"
+              >
+                <span class="text-green-400 group-hover/pill:text-green-300"
+                  >#</span
+                >Cloud
+              </div>
+            </div>
+
+            <!-- Call to Action -->
+            <div class="mt-auto group/cta">
+              <a
+                href="https://automationrealm.tech"
+                class="flex items-center gap-4 text-slate-300 hover:text-white transition-colors"
+              >
+                <span
+                  class="text-lg font-mono border-b border-transparent group-hover/cta:border-cyan-400 pb-0.5 transition-all"
+                  >automationrealm.tech</span
+                >
+                <div
+                  class="w-8 h-8 rounded-full bg-white/5 border border-white/5 flex items-center justify-center group-hover/cta:bg-cyan-500 group-hover/cta:text-black group-hover/cta:border-cyan-400 transition-all duration-300 shadow-[0_0_20px_rgba(0,0,0,0.5)] group-hover/cta:shadow-[0_0_20px_rgba(34,211,238,0.4)]"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="w-4 h-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M14 5l7 7m0 0l-7 7m7-7H3"
+                    />
+                  </svg>
+                </div>
+              </a>
+            </div>
+          </div>
+
+          <!-- LEFT SIDE: 3D Code Visual -->
+          <div
+            class="hidden md:flex flex-1 relative items-center justify-center p-8 perspective-container"
+          >
+            <!-- Floating Code Window -->
+            <div
+              class="code-window rounded-lg w-full max-w-[380px] card-float relative overflow-hidden group/card transform transition-transform"
+            >
+              <!-- Shiny Reflection Overlay -->
+              <div class="reflection-sheen"></div>
+
+              <!-- Scanline Overlay -->
+              <div class="scanline"></div>
+
+              <!-- Window Header -->
+              <div
+                class="flex items-center justify-between px-4 py-3 bg-[#121214] border-b border-white/5 backdrop-blur-xl"
+              >
+                <div class="flex space-x-1.5">
+                  <div
+                    class="w-2.5 h-2.5 rounded-full bg-[#FF5F56] opacity-90 shadow-[0_0_8px_rgba(255,95,86,0.4)]"
+                  ></div>
+                  <div
+                    class="w-2.5 h-2.5 rounded-full bg-[#FFBD2E] opacity-90 shadow-[0_0_8px_rgba(255,189,46,0.4)]"
+                  ></div>
+                  <div
+                    class="w-2.5 h-2.5 rounded-full bg-[#27C93F] opacity-90 shadow-[0_0_8px_rgba(39,201,63,0.4)]"
+                  ></div>
+                </div>
+                <div
+                  class="text-[10px] font-mono text-slate-500 flex items-center gap-2 opacity-70"
+                >
+                  <svg
+                    class="w-2.5 h-2.5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                    ></path>
+                  </svg>
+                  secure_core.ts
+                </div>
+                <div class="w-6"></div>
+              </div>
+
+              <!-- Code Area -->
+              <div
+                class="p-5 font-mono text-xs leading-normal text-slate-300 relative bg-[#0A0A0B]/95 backdrop-blur-sm"
+              >
+                <!-- Line Numbers -->
+                <div
+                  class="absolute left-0 top-5 bottom-0 w-10 text-center text-slate-700 select-none text-[10px] pt-[2px] font-medium opacity-50"
+                >
+                  1<br />2<br />3<br />4<br />5<br />6
+                </div>
+
+                <div class="pl-8">
+                  <div class="flex items-center">
+                    <span class="text-[#c678dd]">import</span>
+                    <span class="text-[#e5c07b] mx-2">{ Auth }</span>
+                    <span class="text-[#c678dd]">from</span>
+                    <span class="text-[#98c379] ml-2">'@realm'</span>;
+                  </div>
+                  <div class="h-3"></div>
+                  <div>
+                    <span class="text-[#56b6c2] italic opacity-80"
+                      >// Initialize</span
+                    >
+                  </div>
+                  <div>
+                    <span class="text-[#c678dd]">const</span>
+                    <span class="text-[#61afef]">deploy</span> =
+                    <span class="text-[#abb2bf]">(</span
+                    ><span class="text-[#e06c75]">cfg</span
+                    ><span class="text-[#abb2bf">)</span>
+                    <span class="text-[#c678dd]">=></span> {
+                  </div>
+                  <div class="pl-4">
+                    <span class="text-[#c678dd]">return</span>
+                    <span class="text-[#e5c07b]">Auth</span>.<span
+                      class="text-[#61afef]"
+                      >init</span
+                    >({
+                  </div>
+                  <div class="pl-8">
+                    <span class="text-[#d19a66]">mode:</span>
+                    <span class="text-[#98c379]">'strict'</span>,
+                  </div>
+                  <div class="pl-8 flex items-center">
+                    <span class="text-[#d19a66]">status:</span>
+                    <span class="text-[#98c379] ml-2">'Active'</span>
+                    <span class="cursor"></span>
+                  </div>
+                  <div class="pl-4">});</div>
+                </div>
+              </div>
+
+              <!-- Terminal Footer -->
+              <div
+                class="bg-[#121214] px-4 py-1.5 border-t border-white/5 flex justify-between items-center opacity-80"
+              >
+                <div class="flex items-center gap-2">
+                  <div
+                    class="w-1.5 h-1.5 rounded-full bg-blue-500 shadow-[0_0_5px_rgba(59,130,246,0.5)]"
+                  ></div>
+                  <span class="text-[8px] font-mono text-slate-500"
+                    >TS 5.0</span
+                  >
+                </div>
+                <div class="flex items-center gap-2">
+                  <span class="text-[8px] font-mono text-slate-500"
+                    >Ln 6, Col 12</span
+                  >
+                </div>
+              </div>
+            </div>
+
+            <!-- Abstract Decoration Lines (Behind) -->
+            <svg
+              class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[160%] h-[160%] pointer-events-none opacity-10 animate-spin-slow"
+              viewBox="0 0 500 500"
+            >
+              <circle
+                cx="250"
+                cy="250"
+                r="220"
+                fill="none"
+                stroke="#22d3ee"
+                stroke-width="0.5"
+                stroke-dasharray="2 10"
+              />
+              <circle
+                cx="250"
+                cy="250"
+                r="180"
+                fill="none"
+                stroke="#4ade80"
+                stroke-width="0.5"
+                stroke-dasharray="10 20"
+              />
+            </svg>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Script to scale the banner for preview purposes -->
+    <script>
+      function scaleBanner() {
+        const wrapper = document.getElementById("preview-wrapper");
+        const bannerWidth = 1584;
+        const bannerHeight = 396;
+        const windowWidth = window.innerWidth;
+        const windowHeight = window.innerHeight;
+
+        // Add some padding
+        const padding = 40;
+        const availableWidth = windowWidth - padding;
+        const availableHeight = windowHeight - padding;
+
+        // Calculate scale
+        const scaleX = availableWidth / bannerWidth;
+        const scaleY = availableHeight / bannerHeight;
+        const scale = Math.min(scaleX, scaleY, 1); // Never scale up, only down
+
+        wrapper.style.transform = `scale(${scale})`;
+      }
+
+      window.addEventListener("resize", scaleBanner);
+      window.addEventListener("load", scaleBanner);
+      // Initial call
+      scaleBanner();
+    </script>
+  </body>
+</html>
