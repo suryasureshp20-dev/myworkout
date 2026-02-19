@@ -8,6 +8,7 @@ import {
   Droplets,
   Footprints,
   CheckCircle2,
+  X,
   ChevronRight,
   Trophy,
   Sun,
@@ -18,7 +19,6 @@ import {
   Sword,
   Target,
   TrendingUp,
-  AlertTriangle,
 } from "lucide-react";
 import { motion, AnimatePresence, type Variants } from "framer-motion";
 import { clsx, type ClassValue } from "clsx";
@@ -30,12 +30,29 @@ function cn(...inputs: ClassValue[]) {
 }
 
 // --- Types ---
+type ProgressionType =
+  | "MAIN_LIFT_TOP_BACKOFF"
+  | "DOUBLE_PROGRESSION"
+  | "LOAD_ONLY"
+  | "TIME_ONLY";
+
+interface ProgressionRule {
+  type: ProgressionType;
+  topSetTargetRPE?: number;
+  addKgOnSuccess?: number;
+  repRange?: [number, number];
+  addKgWhenMaxRepsHit?: number;
+  addSecondsOnSuccess?: number;
+  ruleNote: string;
+}
+
 interface Exercise {
   id: string;
   name: string;
   sets: string;
   reps: string;
   note: string;
+  progression?: ProgressionRule;
 }
 
 interface DaySchedule {
@@ -58,53 +75,28 @@ type DayKey = (typeof DAYS)[number];
 type ScheduleData = Record<DayKey, DaySchedule>;
 
 // ===============================================
-// FIXED 12-WEEK PROGRAM — CONCRETE, NO REDESIGN
-// - Locked exercise list for 12 weeks.
-// - Deload Week: 7 (same exercises, cut sets ~40–50%).
+// 12-WEEK (3 MONTH) LOCKED PROGRAM
+// No changes to exercises. Only increase load using progression rules.
+// Deload weeks: 4, 8, 12 (same exercises, half sets, lighter effort).
 // ===============================================
 const PROGRAM_META = {
+  name: "TOJI DENSITY - ZERO SITTING (PNS SAFE) - 12 WEEKS",
   durationWeeks: 12,
-  deloadWeeks: [7],
-  rules: {
-    lockedFor12Weeks: [
-      "Squat: High-Bar Back Squat (fixed).",
-      "Press: Standing Overhead Press (fixed).",
-      "Chest Mass: Weighted Dips (fixed).",
-      "Primary Row: Chest-Supported Row on Tuesday (fixed).",
-      "Specialization Row: Machine Row on Thursday (fixed).",
-      "Posterior Chain: Romanian Deadlift + Hip Thrust (fixed).",
-      "Lateral/Adductor: Lateral Lunge (fixed).",
-      "Core: Ab Wheel (Tuesday) + Pallof + Hanging Knee Raises (Friday) (fixed).",
-      "Power: Acceleration sprints (fixed). If pilonidal irritation risk, substitute sled pushes with same slot (safety override only).",
-    ],
-    mainLifts: [
-      "Main lifts use honest RIR. NO grinding. If form breaks or rep speed dies, stop and repeat load next week.",
-      "Squat: Top 3–5 @ RIR 2 + 2 back-off sets of 5 @ ~90% of top set.",
-      "RDL: Top 6–8 @ RIR 2 + 2 back-off sets of 6–8 @ ~90% of top set.",
-    ],
-    progression: [
-      "Main lifts: add load ONLY when you hit the top of the rep range at the target RIR with clean form.",
-      "Accessories: double progression (hit top reps on all sets clean → then increase next time, smallest jump).",
-      "Rest times: main lifts 2–4 min, accessories 60–90 sec, carries as needed for perfect posture.",
-    ],
-    powerRules: [
-      "Sprints: full rest 2–3 min. TIME 2 reps weekly (same distance) and record BEST.",
-      "STOP power work if time drops ~2% or mechanics degrade. No fatigue reps.",
-      "Broad jumps: full reset. Record best jump. No sloppy landings.",
-    ],
-    cardioRules: [
-      "Zone 1–2 = easy-moderate. You can talk in short sentences.",
-      "Standing only: incline walk/ruck. Avoid long sweaty sitting after training.",
-    ],
-    pilonidalNotes: [
-      "If irritation occurs: swap sprints → sled pushes; keep cardio standing; shower + dry well; change into dry clothes.",
-      "If pain/swelling/drainage/fever: stop high intensity and seek medical evaluation.",
-    ],
-    deloadRules: [
-      "Week 7: same exercises, cut total sets ~40–50%. Keep intensity moderate (RIR ~4).",
-      "Deload power: reduce sprint/jump volume ~30–40% but keep quality crisp.",
-    ],
-  },
+  deloadWeeks: [4, 8, 12],
+  rules: [
+    "Main lifts: stop 1-2 reps before failure (RPE ~8). No grinding.",
+    "Rest: main lifts 3-5 min, heavy accessories 2-3 min, small work 60-90s.",
+    "If form breaks, the set does not count.",
+    "No sitting-based machines. No bike. No rower. Keep tailbone pressure minimal.",
+    "Deload week (4, 8, 12): do half the sets and keep everything easy (RPE 6-7).",
+  ],
+  sessionChecklist: [
+    "Warm-up 8-12 min: brisk walk + dynamic hips/shoulders + 2-4 ramp-up sets for first lift.",
+    "Do explosive work first (sprints/jumps) while fresh.",
+    "Do main lift next (top set + backoffs).",
+    "Accessories after main lift; do not add extra exercises.",
+    "Shower + keep area dry after training (PNS hygiene).",
+  ],
 } as const;
 
 const WARMUP_BLOCKS = {
@@ -121,352 +113,407 @@ const WARMUP_BLOCKS = {
   ],
 } as const;
 
-// --- DATA: SCHEDULE (FIXED 12 WEEKS, CONCRETE) ---
-// FINAL 12-WEEK LOCKED SCHEDULE (no redesign)
-// Change made: Tuesday core -> Hanging Knee Raises (replacing Ab Wheel)
-// Core is now: Pallof (Fri) + Hanging Knee Raises (Tue + Fri)
+// =====================================================
+// LOCKED EQUIPMENT SETTINGS (SET ONCE, DO NOT CHANGE)
+// =====================================================
+// You said you DON'T have weighted pull-ups and you DO have a pull-up machine.
+// Pick the correct type ONCE and keep it for all 12 weeks.
+const PULL_MAIN_VARIANT: "ASSISTED_PULLUP_MACHINE" | "LAT_PULLDOWN" =
+  "ASSISTED_PULLUP_MACHINE";
+
+// Choose ONE row option and keep it for all 12 weeks.
+const ROW_VARIANT: "LANDMINE_ROW" | "CHEST_SUPPORTED_ROW" = "LANDMINE_ROW";
+
+// You said you have a fly machine — you can enable it (2 sets) or keep it off.
+const USE_FLY_MACHINE = true;
+
+// --- DATA: SCHEDULE (LOCKED 12 WEEKS) ---
+const PROG = {
+  MAIN_LOWER: (addKgOnSuccess = 5): ProgressionRule => ({
+    type: "MAIN_LIFT_TOP_BACKOFF",
+    topSetTargetRPE: 8,
+    addKgOnSuccess,
+    ruleNote:
+      "Top set 3-5 reps @RPE ~8, then all backoffs 3-5 clean. If success, add +5 kg next week. If not, repeat same load.",
+  }),
+  MAIN_UPPER: (addKgOnSuccess = 2.5): ProgressionRule => ({
+    type: "MAIN_LIFT_TOP_BACKOFF",
+    topSetTargetRPE: 8,
+    addKgOnSuccess,
+    ruleNote:
+      "Top set 3-5 reps @RPE ~8, then all backoffs 3-5 clean. If success, add +2.5 kg next week. If not, repeat same load.",
+  }),
+  MAIN_BODYWEIGHT_LOAD: (addKgOnSuccess = 1.25): ProgressionRule => ({
+    type: "MAIN_LIFT_TOP_BACKOFF",
+    topSetTargetRPE: 8,
+    addKgOnSuccess,
+    ruleNote:
+      "Weighted top set 3-5 @RPE ~8 + backoffs 3-5. If success, add +1 to +2.5 kg next week (use smallest plates).",
+  }),
+  // Assisted pull-up machine: you progress by reducing assistance (kg).
+  // We reuse addKgOnSuccess to mean "reduce assistance by X kg on success".
+  MAIN_ASSISTED: (reduceAssistanceKg = 2.5): ProgressionRule => ({
+    type: "MAIN_LIFT_TOP_BACKOFF",
+    topSetTargetRPE: 8,
+    addKgOnSuccess: reduceAssistanceKg,
+    ruleNote:
+      "Assisted pull-up machine: if all top+backoffs hit 3-5 clean, reduce assistance by ~2.5 kg next week. If not, repeat same assistance. (Less assistance = harder.)",
+  }),
+  DOUBLE: (
+    repRange: [number, number],
+    addKgWhenMaxRepsHit = 2.5,
+  ): ProgressionRule => ({
+    type: "DOUBLE_PROGRESSION",
+    repRange,
+    addKgWhenMaxRepsHit,
+    ruleNote: `Keep weight until you hit ${repRange[1]} reps on all sets with clean form. Then add ~${addKgWhenMaxRepsHit} kg and go back to ${repRange[0]} reps.`,
+  }),
+  LOAD_ONLY: (addKgOnSuccess = 2.5): ProgressionRule => ({
+    type: "LOAD_ONLY",
+    addKgOnSuccess,
+    ruleNote:
+      "Add weight only when every set is crisp and posture is perfect. If grip or posture breaks, keep the same load.",
+  }),
+  TIME_ONLY: (addSecondsOnSuccess = 10): ProgressionRule => ({
+    type: "TIME_ONLY",
+    addSecondsOnSuccess,
+    ruleNote: `Add +${addSecondsOnSuccess}s each week until you reach the top target time. Then increase difficulty (more load or plate).`,
+  }),
+};
+
+// ----- Equipment-aware exercise picks (LOCKED once by constants above) -----
+const TUESDAY_MAIN_PULL: Exercise =
+  PULL_MAIN_VARIANT === "ASSISTED_PULLUP_MACHINE"
+    ? {
+        id: "t1",
+        name: "Assisted Pull-up Machine (MAIN)",
+        sets: "1 Top + 4 Backoff",
+        reps: "3-5",
+        note: "Use SAME grip every week. Top set @RPE ~8. Backoffs: slightly MORE assistance than top set so you can still hit 3-5 clean. Rest 3-5 min.",
+        progression: PROG.MAIN_ASSISTED(2.5),
+      }
+    : {
+        id: "t1",
+        name: "Lat Pulldown (MAIN)",
+        sets: "1 Top + 4 Backoff",
+        reps: "4-6",
+        note: "Heavy and strict. Pull to upper chest, full stretch at top. No jerking. Rest 2-3 min.",
+        progression: PROG.MAIN_UPPER(2.5),
+      };
+
+const TUESDAY_ROW: Exercise =
+  ROW_VARIANT === "LANDMINE_ROW"
+    ? {
+        id: "t2",
+        name: "Landmine Row (Standing)",
+        sets: "4 Sets",
+        reps: "6-8",
+        note: "Strict hinge. Pull to hip line. No cheating. Heavy and clean. No seated rows.",
+        progression: PROG.DOUBLE([6, 8], 2.5),
+      }
+    : {
+        id: "t2",
+        name: "Chest-Supported Row (Prone on Incline Bench)",
+        sets: "4 Sets",
+        reps: "6-8",
+        note: "Lie chest-down on incline bench (not seated). Full stretch, hard squeeze. Protects low back.",
+        progression: PROG.DOUBLE([6, 8], 2.5),
+      };
+
+const OPTIONAL_FLY: Exercise = {
+  id: "w3b",
+  name: "Machine Chest Fly (Locked Optional)",
+  sets: "2 Sets",
+  reps: "12-15",
+  note: "Slow stretch, controlled squeeze. Stop 1-2 reps before failure. If shoulders feel pinchy, set USE_FLY_MACHINE=false and keep it off for all 12 weeks.",
+  progression: PROG.DOUBLE([12, 15], 2.5),
+};
 
 const SCHEDULE: ScheduleData = {
   Monday: {
-    title: "LOWER A",
-    subtitle: "Acceleration + Jumps + Squat (QUALITY > VOLUME)",
+    title: "LOWER POWER",
+    subtitle: "Explosive Speed + Zercher Strength",
     exercises: [
       {
-        id: "m0",
-        name: "Acceleration Sprints (Outdoors)",
-        sets: "5 Sets",
-        reps: "10–20m",
-        note: "Full rest 2–3 min. TIME 2 reps weekly (same distance) and record BEST. Stop if time drops ~2% or mechanics degrade. Safety override: if pilonidal irritation risk, do sled pushes same slot.",
-      },
-      {
         id: "m1",
-        name: "Broad Jumps",
-        sets: "3 Sets",
-        reps: "2 Jumps",
-        note: "Full reset. Record best jump. Crisp takeoff + landing only. No fatigue reps.",
+        name: "Wall Sprints",
+        sets: "5 Sets",
+        reps: "15s",
+        note: "Max speed knee drives. Full rest 60-90s. Stop if speed drops. Zero tailbone pressure.",
       },
       {
         id: "m2",
-        name: "High-Bar Back Squat (Main Lift) — LOCKED 12 weeks",
-        sets: "1 Top + 2 Back-off",
-        reps: "Top: 3–5 | Back-off: 5",
-        note: "Top set @ RIR 2. Back-offs ~90% of top set. No grinding. Keep speed quality intact.",
+        name: "Broad Jumps",
+        sets: "3 Sets",
+        reps: "2 Jumps",
+        note: "Max distance. Full reset between jumps. Quality only (do these before heavy lifting).",
       },
       {
         id: "m3",
-        name: "Bulgarian Split Squat",
-        sets: "2 Sets",
-        reps: "8–12 / Leg",
-        note: "Controlled. RIR 1–2. Perfect knee tracking. No knee cave.",
+        name: "Zercher Squat (MAIN)",
+        sets: "1 Top + 4 Backoff",
+        reps: "3-5",
+        note: "Bar in elbows, upright torso, hard brace. No lower-back rounding. Rest 3-5 min.",
+        progression: PROG.MAIN_LOWER(5),
       },
       {
         id: "m4",
-        name: "Hamstring Curl",
+        name: "DB Walking Lunges (HEAVY)",
         sets: "3 Sets",
-        reps: "8–12",
-        note: "Full ROM. Controlled eccentric. No hip lift/cheating.",
+        reps: "6/leg",
+        note: "Heavy DBs. Long stride, chest up. Rest 2-3 min. Do not turn this into cardio.",
+        progression: PROG.DOUBLE([6, 8], 2.5),
       },
       {
         id: "m5",
         name: "Standing Calf Raises",
         sets: "4 Sets",
-        reps: "2×6–10 + 2×12–20",
-        note: "Pause at top + deep stretch. No bouncing. Full ROM every rep.",
-      },
-      {
-        id: "m6",
-        name: "Tibialis Raises",
-        sets: "2 Sets",
-        reps: "20–30",
-        note: "Full ROM for shin/ankle durability.",
+        reps: "8-12",
+        note: "Full stretch at bottom, hard squeeze at top. Slow and heavy. Rest 90s.",
+        progression: PROG.DOUBLE([8, 12], 5),
       },
     ],
   },
 
   Tuesday: {
-    title: "PULL (HEAVY)",
-    subtitle: "Width + Thickness + Arms + Anterior Core",
+    title: "V-TAPER PULL",
+    subtitle: "Width + Grip Density (No Sitting)",
     exercises: [
-      {
-        id: "t0",
-        name: "Scapular Pull-ups (Primer)",
-        sets: "2 Sets",
-        reps: "5–8",
-        note: "Warm-up only (easy). Straight arms. Depress scapula and hold 1–2s. DO NOT fatigue.",
-      },
-      {
-        id: "t1",
-        name: "Weighted Pull-ups",
-        sets: "4 Sets",
-        reps: "4–7",
-        note: "Full hang. RIR 1–2. Add load only when all sets hit 7 clean with same ROM.",
-      },
-      {
-        id: "t2",
-        name: "Chest-Supported Row",
-        sets: "3 Sets",
-        reps: "6–10",
-        note: "Strict. Same ROM every rep. RIR 1–2. Progress in logbook.",
-      },
+      TUESDAY_MAIN_PULL,
+      TUESDAY_ROW,
       {
         id: "t3",
-        name: "Neutral-Grip Pulldown (Lat Stretch Focus)",
-        sets: "2 Sets",
-        reps: "10–15",
-        note: "Full overhead stretch; drive elbows down. No swinging.",
+        name: "Farmer's Walks (MAX LOAD)",
+        sets: "6 Sets",
+        reps: "20-30m",
+        note: "Heaviest you can carry with perfect posture (no slouch). Rest 2-3 min.",
+        progression: PROG.LOAD_ONLY(2.5),
       },
       {
         id: "t4",
-        name: "Face Pulls",
+        name: "Standing Hammer Curls (HEAVY)",
         sets: "2 Sets",
-        reps: "15–25",
-        note: "Rear delts + shoulder health. Control and pause.",
+        reps: "6-8",
+        note: "Go heavy. Full range. Rest 2 min. This is thickness, not pump.",
+        progression: PROG.DOUBLE([6, 8], 2.5),
       },
       {
         id: "t5",
-        name: "Incline DB Curls",
+        name: "Plate Pinches",
         sets: "2 Sets",
-        reps: "8–12",
-        note: "Full stretch. No cheating. Stop 1–2 reps before failure.",
+        reps: "Max Time",
+        note: "Stop before grip fully fails. Progress by time first, then heavier plates.",
+        progression: PROG.TIME_ONLY(10),
       },
       {
         id: "t6",
-        name: "Hammer Curls",
+        name: "Dead Hangs",
         sets: "2 Sets",
-        reps: "8–12",
-        note: "Brachialis + forearm thickness. Neutral grip. Clean reps only.",
-      },
-      {
-        id: "t7",
-        name: "Hanging Knee Raises",
-        sets: "2 Sets",
-        reps: "8–12",
-        note: "Strict. ZERO swinging. Dead hang each rep. Posterior pelvic tilt at top. 2–3s controlled descent.",
+        reps: "Max Time",
+        note: "Decompress + grip. Stop if shoulders feel irritated. Keep area ventilated.",
+        progression: PROG.TIME_ONLY(10),
       },
     ],
   },
 
   Wednesday: {
-    title: "PUSH (HEAVY)",
-    subtitle: "Upper Chest + Delts + Triceps",
+    title: "ARMOR PUSH",
+    subtitle: "Upper Chest Shelf + Pressing Power",
     exercises: [
       {
         id: "w1",
-        name: "Incline DB Press",
-        sets: "4 Sets",
-        reps: "6–10",
-        note: "Priority press for upper chest. Controlled eccentric. RIR 1–2. Add load only when all sets hit 10 clean.",
+        name: "Incline DB Press (MAIN)",
+        sets: "1 Top + 4 Backoff",
+        reps: "3-5",
+        note: "30-45 degree incline. Pick a bench setup that does not aggravate PNS. Rest 3-5 min.",
+        progression: PROG.MAIN_UPPER(2.5),
       },
       {
         id: "w2",
-        name: "Standing Overhead Press — LOCKED 12 weeks",
+        name: "Standing Overhead Press (SECONDARY)",
         sets: "3 Sets",
-        reps: "4–8",
-        note: "Strict. No layback. RIR 2. Add load when all sets hit 8 clean.",
+        reps: "5",
+        note: "Moderate load (RPE ~7). Squeeze glutes, ribs down. Perfect reps only.",
+        progression: PROG.DOUBLE([5, 6], 2.5),
       },
       {
         id: "w3",
-        name: "Weighted Dips — LOCKED 12 weeks",
+        name: "Weighted Dips (HEAVY)",
         sets: "3 Sets",
-        reps: "6–10",
-        note: "Smooth reps. RIR 1–2. Add load when all sets hit 10 clean. If dips cause pain, swap ONCE to DB Bench and lock it (safety override only).",
+        reps: "5-8",
+        note: "Controlled depth. Add weight slowly. Stop if shoulders complain.",
+        progression: PROG.DOUBLE([5, 8], 1.25),
       },
+      ...(USE_FLY_MACHINE ? [OPTIONAL_FLY] : []),
       {
         id: "w4",
         name: "Cable Lateral Raises",
         sets: "3 Sets",
-        reps: "12–20",
-        note: "Side delts for shirt width. Strict. Constant tension. No swing.",
+        reps: "12-15",
+        note: "Strict. No torso swing. Controlled eccentric. Rest 60-90s.",
+        progression: PROG.DOUBLE([12, 15], 1.25),
       },
       {
         id: "w5",
-        name: "Overhead Cable Triceps Extension",
+        name: "Hanging Leg Raises",
         sets: "3 Sets",
-        reps: "10–15",
-        note: "Direct triceps (long head). Full stretch. No elbow pain.",
+        reps: "8-12",
+        note: "Strict hang. No swinging. If grip limits you, use straps.",
+        progression: PROG.DOUBLE([8, 12], 0),
+      },
+      {
+        id: "w6",
+        name: "Overhead Cable Triceps Extension",
+        sets: "2 Sets",
+        reps: "10-12",
+        note: "Targets triceps long head for arm density. Keep elbows stable.",
+        progression: PROG.DOUBLE([10, 12], 1.25),
       },
     ],
   },
 
   Thursday: {
-    title: "UPPER SPECIALIZATION (DENSE LOOK)",
-    subtitle: "Traps + Delts + Back + Arms + Carries + Neck",
+    title: "UPPER DENSITY",
+    subtitle: "Traps + Neck + Rotation (Low Back Friendly)",
     exercises: [
       {
         id: "th1",
-        name: "Shrugs (DB or Barbell)",
-        sets: "4 Sets",
-        reps: "6–10",
-        note: "Priority. Heavy. 2-sec squeeze at top. No bouncing. Full ROM.",
+        name: "Heavy DB Shrugs (DENSITY)",
+        sets: "5 Sets",
+        reps: "5",
+        note: "Explosive up, 2s hold at top, controlled down. No cheating.",
+        progression: PROG.DOUBLE([5, 6], 2.5),
       },
       {
         id: "th2",
-        name: "Machine Row — LOCKED 12 weeks",
-        sets: "3 Sets",
-        reps: "6–10",
-        note: "Brace hard. No heaving. RIR 1–2. Progress in logbook.",
+        name: "Standing Cable Chops (EXPLOSIVE)",
+        sets: "4 Sets",
+        reps: "6/side",
+        note: "Power movement. Rest enough to keep speed high. Pivot foot.",
+        progression: PROG.DOUBLE([6, 8], 1.25),
       },
       {
         id: "th3",
-        name: "Leaning Cable Lateral Raises",
-        sets: "3 Sets",
-        reps: "12–20",
-        note: "Strict, no swing. Different angle than Wednesday. Constant tension.",
+        name: "Standing Face Pulls",
+        sets: "2 Sets",
+        reps: "15-20",
+        note: "Pull to eyes, elbows high. Shoulder health + rear delts.",
+        progression: PROG.DOUBLE([15, 20], 1.25),
       },
       {
         id: "th4",
-        name: "Rear Delt Fly (Cable or Reverse Pec Deck)",
-        sets: "2 Sets",
-        reps: "15–25",
-        note: "Rear delts. Controlled. Don’t let traps dominate.",
+        name: "Neck 4-Way (Hands/Towel Resistance)",
+        sets: "3 Sets",
+        reps: "12-15",
+        note: "Controlled isometric resistance. Zero ego. Never strain or jerk.",
+        progression: PROG.DOUBLE([12, 15], 0),
       },
       {
         id: "th5",
-        name: "Cable Curl",
-        sets: "2 Sets",
-        reps: "8–12",
-        note: "No swinging. Full ROM. RIR 1–2.",
-      },
-      {
-        id: "th6",
-        name: "Rope Pressdowns",
-        sets: "2 Sets",
-        reps: "10–15",
-        note: "Direct triceps. Elbows pinned. Full lockout. Clean reps.",
-      },
-      {
-        id: "th7",
-        name: "Suitcase Carries",
-        sets: "3 Sets",
-        reps: "30–40m / Side",
-        note: "Anti-lateral flexion. Walk tall. Stop before posture breaks.",
-      },
-      {
-        id: "th8",
-        name: "Standing Neck Training (4-Way Band/Hand)",
-        sets: "2 Sets",
-        reps: "15–25",
-        note: "Easy-moderate. No pain. Controlled reps only. Never grind neck work.",
+        name: "Dead Hangs (Optional if already done Tuesday)",
+        sets: "1 Set",
+        reps: "Max Time",
+        note: "Only if shoulders feel great. Otherwise skip. No pain allowed.",
+        progression: PROG.TIME_ONLY(10),
       },
     ],
   },
 
   Friday: {
-    title: "LOWER B",
-    subtitle: "RDL + Legs + Calves + Trunk + Short Zone 1–2 (Standing)",
+    title: "POSTERIOR CHAIN",
+    subtitle: "Deadlift Power + Hamstrings",
     exercises: [
       {
         id: "f1",
-        name: "Romanian Deadlift (Main Lift) — LOCKED 12 weeks",
-        sets: "1 Top + 2 Back-off",
-        reps: "Top: 6–8 | Back-off: 6–8",
-        note: "Top set @ RIR 2. Back-offs ~90%. Perfect hinge. No grinding.",
+        name: "Deadlift (MAIN)",
+        sets: "1 Top + 4 Backoff",
+        reps: "2-3",
+        note: "Top set @RPE ~8, backoffs ~90%. Brace hard. Rest 3-5 min.",
+        progression: PROG.MAIN_LOWER(5),
       },
       {
         id: "f2",
-        name: "Hip Thrust — LOCKED 12 weeks",
-        sets: "3 Sets",
-        reps: "8–12",
-        note: "Controlled reps. Strong lockout. RIR 1–2.",
+        name: "Romanian Deadlift (HEAVY)",
+        sets: "2 Sets",
+        reps: "5-6",
+        note: "Long hamstring stretch, flat back, no bounce. Rest 2-3 min.",
+        progression: PROG.DOUBLE([5, 6], 2.5),
       },
       {
         id: "f3",
-        name: "Lateral Lunge — LOCKED 12 weeks",
-        sets: "2 Sets",
-        reps: "8–10 / Side",
-        note: "Adductors + lateral strength. Smooth depth, knee tracking.",
+        name: "Standing Single-Leg Curl (Cable/Machine)",
+        sets: "3 Sets",
+        reps: "10-12/leg",
+        note: "Strict hamstring isolation. Do not use lying curl if it irritates PNS.",
+        progression: PROG.DOUBLE([10, 12], 1.25),
       },
       {
         id: "f4",
-        name: "Hamstring Curl",
-        sets: "2 Sets",
-        reps: "8–12",
-        note: "Second weekly knee-flexion exposure (reduced volume). Full ROM, controlled eccentric.",
-      },
-      {
-        id: "f5",
-        name: "Seated Calf Raises",
-        sets: "3 Sets",
-        reps: "10–15",
-        note: "Deep stretch + pause. No bouncing.",
-      },
-      {
-        id: "f6",
-        name: "Pallof Press (Anti-Rotation)",
-        sets: "2 Sets",
-        reps: "10–15 / Side",
-        note: "Brace hard. Ribs down. No torso twist. Control the return.",
-      },
-      {
-        id: "f7",
-        name: "Hanging Knee Raises",
-        sets: "2 Sets",
-        reps: "8–12",
-        note: "Strict. ZERO swinging. Dead hang each rep. Posterior pelvic tilt at top. 2–3s controlled descent.",
-      },
-      {
-        id: "f8",
-        name: "Zone 1–2 Incline Walk / Ruck (Standing)",
-        sets: "1 Session",
-        reps: "20–30 mins",
-        note: "Easy-moderate. Standing only. Shower + dry well after.",
+        name: "Hill Sprints",
+        sets: "4 Rounds",
+        reps: "10-12s",
+        note: "Max effort, walk-down rest. Skip if hamstrings feel tight or if recovery is poor.",
       },
     ],
   },
 
   Saturday: {
-    title: "CARDIO",
-    subtitle: "Zone 1–2 + Mobility (Standing)",
+    title: "ENGINE",
+    subtitle: "Zone 2 Recovery Cardio",
     exercises: [
       {
-        id: "sa1",
-        name: "Zone 1–2 Incline Walk / Ruck (Standing)",
-        sets: "1 Session",
-        reps: "60 mins",
-        note: "Steady pace. Low joint stress. Standing only.",
+        id: "s1",
+        name: "Incline Treadmill Walk",
+        sets: "1 Sess",
+        reps: "35-45 mins",
+        note: "Nasal breathing. Easy pace. No bike. No rower. This is recovery.",
       },
       {
-        id: "sa2",
-        name: "Mobility Flow",
-        sets: "1 Session",
-        reps: "10–15 mins",
-        note: "Focus on hips, ankles, and T-spine. Smooth, not aggressive.",
+        id: "s2",
+        name: "Standing Mobility",
+        sets: "1 Sess",
+        reps: "15 mins",
+        note: "Hips + ankles + t-spine + shoulders. Keep it gentle and consistent.",
       },
     ],
   },
 
   Sunday: {
     title: "REST",
-    subtitle: "Steps + Recovery",
+    subtitle: "Growth + Repair",
     exercises: [
       {
         id: "su1",
-        name: "Walk (Steps)",
-        sets: "1 Session",
-        reps: "8k–12k steps",
-        note: "Keep weekly step average high for leanness. Easy pace.",
+        name: "Walk Outside",
+        sets: "1 Sess",
+        reps: "8-10k steps",
+        note: "Easy pace. Do not sit for long blocks. Stand up often.",
       },
     ],
   },
 };
 
-// --- DATA: MORNING RITUAL (fixed) ---
+// --- Morning Ritual (Locked) ---
 const MORNING_RITUAL: Exercise[] = [
   {
     id: "mr1",
-    name: "Fingertip Plank (Submax)",
-    sets: "2–3 Sets",
-    reps: "RPE 7–8",
-    note: "2–3×/week only. Leave 2–3 reps/seconds in reserve. Do NOT daily-fail.",
+    name: "Standing Fingertip Plank (Wall/Counter)",
+    sets: "3 Sets",
+    reps: "10-30s",
+    note: "Do not go to failure. Stop before form breaks. Save grip for pulling.",
+    progression: PROG.TIME_ONLY(5),
   },
   {
     id: "mr2",
-    name: "Sink Decompression",
-    sets: "1–2 mins",
+    name: "Standing Lat Stretch (Doorframe)",
+    sets: "2 Mins",
     reps: "Hold",
-    note: "Gentle spinal decompression. No pain.",
+    note: "Gentle traction. No pain, no numbness. Breathe slowly.",
   },
 ];
+
+const DELOAD_RULE_TEXT =
+  "Week 4/8/12 deload: half sets, lighter weight, RPE 6-7, perfect speed + form.";
 
 // --- Animation ---
 const containerVar: Variants = {
@@ -478,27 +525,47 @@ const itemVar: Variants = {
   show: { opacity: 1, y: 0 },
 };
 
+const openFormGuide = (exerciseName: string) => {
+  const searchQuery = encodeURIComponent(`${exerciseName} proper form`);
+  if (typeof window !== "undefined") {
+    window.open(
+      `https://www.youtube.com/results?search_query=${searchQuery}`,
+      "_blank",
+    );
+  }
+};
+
+const getFocusFromNote = (note: string) => {
+  const n = note.toLowerCase();
+  if (n.includes("grip") || n.includes("forearm")) return "Grip & forearms";
+  if (n.includes("core")) return "Core stability";
+  if (n.includes("sprint") || n.includes("speed") || n.includes("power"))
+    return "Speed & power";
+  if (n.includes("glute")) return "Glutes";
+  if (n.includes("hamstring")) return "Hamstrings";
+  if (n.includes("upper chest")) return "Upper chest";
+  if (n.includes("shoulder")) return "Shoulders";
+  if (n.includes("triceps")) return "Triceps";
+  if (n.includes("back") || n.includes("lats")) return "Back";
+  if (n.includes("neck") || n.includes("traps")) return "Neck & traps";
+  if (n.includes("mobility") || n.includes("stretch")) return "Mobility";
+  return null;
+};
+
 // --- Sub-Components ---
 const ExerciseCard = ({
   ex,
   isCompleted,
   onToggle,
+  onOpen,
   icon,
 }: {
   ex: Exercise;
   isCompleted: boolean;
   onToggle: () => void;
+  onOpen: () => void;
   icon?: React.ReactNode;
 }) => {
-  const handleInfoClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    const searchQuery = encodeURIComponent(`${ex.name} proper form`);
-    window.open(
-      `https://www.youtube.com/results?search_query=${searchQuery}`,
-      "_blank",
-    );
-  };
-
   return (
     <motion.div
       variants={itemVar}
@@ -506,7 +573,7 @@ const ExerciseCard = ({
       onClick={() => {
         if (typeof navigator !== "undefined" && navigator.vibrate)
           navigator.vibrate(50);
-        onToggle();
+        onOpen();
       }}
       className={cn(
         "relative border p-4 rounded-2xl flex flex-row items-center gap-4 transition-all cursor-pointer backdrop-blur-md active:opacity-80",
@@ -516,52 +583,50 @@ const ExerciseCard = ({
       )}
     >
       {/* Check Circle */}
-      <div
+      <button
+        type="button"
         className={cn(
-          "w-8 h-8 rounded-full border-2 flex items-center justify-center transition-all flex-shrink-0",
+          "w-8 h-8 rounded-full border-2 flex items-center justify-center transition-all flex-shrink-0 active:scale-95",
           isCompleted
             ? "border-green-500 bg-green-500 text-slate-950"
             : "border-slate-600 text-transparent",
         )}
+        onClick={(e) => {
+          e.stopPropagation();
+          if (typeof navigator !== "undefined" && navigator.vibrate)
+            navigator.vibrate(15);
+          onToggle();
+        }}
+        aria-label={
+          isCompleted ? "Mark exercise incomplete" : "Mark exercise complete"
+        }
       >
         <CheckCircle2 size={16} strokeWidth={4} />
-      </div>
+      </button>
 
       {/* Text Content */}
       <div className="flex-1 min-w-0">
-        <div className="flex justify-between items-center">
-          <div className="flex items-center gap-2 overflow-hidden">
-            <h3
-              className={cn(
-                "text-base font-bold font-oswald tracking-wide truncate",
-                isCompleted
-                  ? "text-green-500/70 line-through"
-                  : "text-slate-100",
-              )}
-            >
-              {ex.name}
-            </h3>
-
-            <button
-              onClick={handleInfoClick}
-              className="p-1.5 rounded-full bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 active:scale-90 transition-all flex-shrink-0"
-              aria-label={`Open form guide for ${ex.name}`}
-            >
-              <Info size={14} />
-            </button>
-          </div>
-
-          {icon && <div className="text-slate-500">{icon}</div>}
+        <div className="flex items-start gap-2">
+          <h3
+            className={cn(
+              "text-base font-bold font-oswald tracking-wide leading-snug",
+              isCompleted ? "text-green-500/80" : "text-slate-100",
+            )}
+          >
+            {ex.name}
+          </h3>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              openFormGuide(ex.name);
+            }}
+            className="p-1.5 rounded-full bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 active:scale-90 transition-all flex-shrink-0"
+            aria-label={`Open form guide for ${ex.name}`}
+          >
+            <Info size={14} />
+          </button>
         </div>
-
-        <p
-          className={cn(
-            "text-xs truncate font-roboto mt-0.5",
-            isCompleted ? "text-green-500/40" : "text-slate-400",
-          )}
-        >
-          {ex.note}
-        </p>
       </div>
 
       {/* Stats Pill */}
@@ -585,6 +650,135 @@ const ExerciseCard = ({
           {ex.sets}
         </span>
       </div>
+
+      {icon && <div className="text-slate-500">{icon}</div>}
+    </motion.div>
+  );
+};
+
+const ExerciseModal = ({
+  exercise,
+  onClose,
+}: {
+  exercise: Exercise;
+  onClose: () => void;
+}) => {
+  const focus = getFocusFromNote(exercise.note);
+
+  return (
+    <motion.div
+      className="fixed inset-0 z-[100] flex items-end justify-center"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      aria-modal="true"
+      role="dialog"
+    >
+      <div
+        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+        onClick={onClose}
+      />
+      <motion.div
+        className="relative w-full max-w-md mx-auto bg-slate-950/90 border border-slate-800 rounded-t-3xl p-5 pb-7 backdrop-blur-xl shadow-2xl"
+        initial={{ y: 60, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        exit={{ y: 80, opacity: 0 }}
+        transition={{ type: "spring", stiffness: 240, damping: 24 }}
+        drag="y"
+        dragConstraints={{ top: 0, bottom: 0 }}
+        dragElastic={0.2}
+        onDragEnd={(_, info) => {
+          if (info.offset.y > 120 || info.velocity.y > 800) onClose();
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="mx-auto mb-4 h-1.5 w-12 rounded-full bg-slate-700/70" />
+
+        <button
+          type="button"
+          onClick={onClose}
+          className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full border border-slate-800 bg-slate-900/80 text-slate-300 active:scale-95"
+          aria-label="Close details"
+        >
+          <X size={18} />
+        </button>
+
+        <div className="space-y-4">
+          <div>
+            <p className="text-[10px] font-bold font-oswald text-slate-500 uppercase tracking-[0.3em]">
+              Exercise Detail
+            </p>
+            <h3 className="mt-2 text-xl font-bold font-oswald text-white leading-snug">
+              {exercise.name}
+            </h3>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4">
+              <p className="text-[10px] font-bold uppercase text-slate-400">
+                Sets
+              </p>
+              <p className="mt-1 text-lg font-bold text-white font-oswald">
+                {exercise.sets}
+              </p>
+            </div>
+            <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4">
+              <p className="text-[10px] font-bold uppercase text-slate-400">
+                Reps
+              </p>
+              <p className="mt-1 text-lg font-bold text-white font-oswald">
+                {exercise.reps}
+              </p>
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4">
+            <p className="text-[10px] font-bold uppercase text-slate-400">
+              Detail
+            </p>
+            <p className="mt-2 text-sm text-slate-200 leading-relaxed">
+              {exercise.note}
+            </p>
+          </div>
+
+          {exercise.progression && (
+            <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4">
+              <p className="text-[10px] font-bold uppercase text-slate-400">
+                Progression Rule
+              </p>
+              <p className="mt-2 text-sm text-slate-200 leading-relaxed">
+                {exercise.progression.ruleNote}
+              </p>
+            </div>
+          )}
+
+          {focus && (
+            <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4">
+              <p className="text-[10px] font-bold uppercase text-slate-400">
+                Focus
+              </p>
+              <p className="mt-2 text-sm text-slate-200">{focus}</p>
+            </div>
+          )}
+
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => openFormGuide(exercise.name)}
+              className="flex-1 rounded-2xl border border-blue-500/40 bg-blue-500/10 px-4 py-3 text-sm font-bold text-blue-300 shadow-[0_0_18px_rgba(59,130,246,0.18)] active:scale-[0.99]"
+            >
+              Form Guide
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              className="rounded-2xl border border-slate-800 bg-slate-900/70 px-4 py-3 text-sm font-bold text-slate-300 active:scale-[0.99]"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      </motion.div>
     </motion.div>
   );
 };
@@ -632,18 +826,18 @@ const RulesSection = ({ onBack }: { onBack: () => void }) => (
       <h3 className="font-oswald font-bold text-white flex items-center gap-2">
         <Target size={18} className="text-blue-500" /> PROGRAM RULES
       </h3>
+      <p className="text-[11px] text-slate-500 mt-1 font-roboto">
+        {PROGRAM_META.name}
+      </p>
 
       <div className="mt-3 space-y-3">
         <div className="bg-slate-950/40 border border-slate-800 rounded-xl p-4">
           <div className="flex items-center gap-2 text-white font-oswald font-bold">
             <TrendingUp size={16} className="text-green-500" />
-            Progression
+            Execution Rules
           </div>
           <ul className="mt-2 text-sm text-slate-400 list-disc pl-5 space-y-1">
-            {PROGRAM_META.rules.mainLifts.map((r) => (
-              <li key={r}>{r}</li>
-            ))}
-            {PROGRAM_META.rules.progression.map((r) => (
+            {PROGRAM_META.rules.map((r) => (
               <li key={r}>{r}</li>
             ))}
           </ul>
@@ -651,11 +845,11 @@ const RulesSection = ({ onBack }: { onBack: () => void }) => (
 
         <div className="bg-slate-950/40 border border-slate-800 rounded-xl p-4">
           <div className="flex items-center gap-2 text-white font-oswald font-bold">
-            <Zap size={16} className="text-blue-400" />
-            Power Quality
+            <Target size={16} className="text-blue-400" />
+            Session Checklist
           </div>
           <ul className="mt-2 text-sm text-slate-400 list-disc pl-5 space-y-1">
-            {PROGRAM_META.rules.powerRules.map((r) => (
+            {PROGRAM_META.sessionChecklist.map((r) => (
               <li key={r}>{r}</li>
             ))}
           </ul>
@@ -667,31 +861,30 @@ const RulesSection = ({ onBack }: { onBack: () => void }) => (
             Deload
           </div>
           <p className="mt-2 text-sm text-slate-400">
-            Week{" "}
+            Weeks{" "}
             <span className="text-white font-bold">
               {PROGRAM_META.deloadWeeks.join(", ")}
             </span>
-            : cut sets ~40–50%. Same exercises. Keep quality high.
+            : {DELOAD_RULE_TEXT}
           </p>
-          <ul className="mt-2 text-sm text-slate-400 list-disc pl-5 space-y-1">
-            {PROGRAM_META.rules.deloadRules.map((r) => (
-              <li key={r}>{r}</li>
-            ))}
-          </ul>
-        </div>
-
-        <div className="bg-slate-950/40 border border-slate-800 rounded-xl p-4">
-          <div className="flex items-center gap-2 text-white font-oswald font-bold">
-            <AlertTriangle size={16} className="text-yellow-400" />
-            Locked (12 weeks)
-          </div>
-          <ul className="mt-2 text-sm text-slate-400 list-disc pl-5 space-y-1">
-            {PROGRAM_META.rules.lockedFor12Weeks.map((r) => (
-              <li key={r}>{r}</li>
-            ))}
-          </ul>
         </div>
       </div>
+    </div>
+
+    {/* Locked equipment */}
+    <div className="bg-slate-900/50 p-5 rounded-2xl border-l-4 border-purple-500">
+      <h3 className="font-oswald font-bold text-white flex items-center gap-2">
+        <Sword size={18} className="text-purple-400" /> LOCKED EQUIPMENT
+      </h3>
+      <p className="text-sm text-slate-400 mt-2">
+        Pull main:{" "}
+        <span className="text-white font-bold">{PULL_MAIN_VARIANT}</span> · Row:{" "}
+        <span className="text-white font-bold">{ROW_VARIANT}</span> · Fly
+        machine:{" "}
+        <span className="text-white font-bold">
+          {USE_FLY_MACHINE ? "ON (2 sets)" : "OFF"}
+        </span>
+      </p>
     </div>
   </motion.div>
 );
@@ -701,6 +894,9 @@ export default function Home() {
   const [currentDay, setCurrentDay] = useState<DayKey>("Monday");
   const [view, setView] = useState<"workout" | "rules">("workout");
   const [completed, setCompleted] = useState<Record<string, boolean>>({});
+  const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(
+    null,
+  );
 
   const gymSectionRef = useRef<HTMLDivElement>(null);
 
@@ -715,6 +911,7 @@ export default function Home() {
 
   const handleDayChange = (day: DayKey) => {
     setCurrentDay(day);
+    setSelectedExercise(null);
     setTimeout(() => {
       gymSectionRef.current?.scrollIntoView({
         behavior: "smooth",
@@ -827,6 +1024,7 @@ export default function Home() {
                         ex={ex}
                         isCompleted={!!completed[ex.id]}
                         onToggle={() => toggle(ex.id)}
+                        onOpen={() => setSelectedExercise(ex)}
                       />
                     ))}
                   </div>
@@ -867,6 +1065,7 @@ export default function Home() {
                         ex={ex}
                         isCompleted={!!completed[ex.id]}
                         onToggle={() => toggle(ex.id)}
+                        onOpen={() => setSelectedExercise(ex)}
                       />
                     ))}
                   </div>
@@ -913,6 +1112,15 @@ export default function Home() {
           )}
         </AnimatePresence>
       </main>
+
+      <AnimatePresence>
+        {selectedExercise && (
+          <ExerciseModal
+            exercise={selectedExercise}
+            onClose={() => setSelectedExercise(null)}
+          />
+        )}
+      </AnimatePresence>
 
       {/* FOOTER */}
       <footer className="fixed bottom-0 w-full bg-slate-950/90 border-t border-slate-800 backdrop-blur-lg pb-6 pt-3 px-6 z-50">
